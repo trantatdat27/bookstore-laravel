@@ -37,20 +37,13 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             
-            <form action="{{ route('client.home') }}" method="GET" class="d-flex mx-lg-auto my-3 my-lg-0 col-12 col-lg-6">
-                <div class="input-group search-group shadow-sm border border-primary rounded-pill bg-white">
-                    <input type="text" name="search" class="form-control border-0 shadow-none" placeholder="Tìm tên sách, tác giả..." value="{{ request('search') }}">
-                    <div class="vr my-2 text-muted"></div>
-                    <select name="category" class="form-select border-0 shadow-none text-muted">
-                        <option value="">Tất cả danh mục</option>
-                        @php $headerCategories = \App\Models\Category::all(); @endphp
-                        @foreach($headerCategories as $cat)
-                            <option value="{{ $cat->id }}" {{ request('category') == $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
-                        @endforeach
-                    </select>
-                    <button class="btn btn-primary px-4 fw-bold" type="submit"><i class="fas fa-search"></i></button>
-                </div>
-            </form>
+            <form action="{{ route('client.home') }}" method="GET" class="d-flex mx-lg-auto my-3 my-lg-0 col-12 col-lg-5">
+    <div class="input-group search-group shadow-sm border border-primary rounded-pill bg-white">
+        <input type="text" name="keyword" class="form-control border-0 shadow-none bg-transparent" placeholder="Tìm tên sách, tác giả..." value="{{ request('keyword') }}">
+        
+        <button class="btn btn-primary px-4 fw-bold" type="submit"><i class="fas fa-search"></i></button>
+    </div>
+</form>
 
             <ul class="navbar-nav ms-auto align-items-center">
                 <li class="nav-item me-2 d-none d-xl-block">

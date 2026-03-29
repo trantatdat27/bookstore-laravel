@@ -12,7 +12,8 @@ class CartController extends Controller
     public function index()
     {
         $cart = session()->get('cart', []);
-        return view('client.cart', compact('cart'));
+        $total = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
+        return view('client.cart', compact('cart', 'total'));
     }
 
     // Thêm sản phẩm
@@ -20,7 +21,6 @@ class CartController extends Controller
     {
         $book = Book::findOrFail($id);
         
-        // Kiểm tra xem sách còn hàng không trước khi thêm
         if ($book->stock <= 0) {
             return redirect()->back()->with('error', 'Sách này hiện đã hết hàng!');
         }
@@ -34,7 +34,8 @@ class CartController extends Controller
                 "title" => $book->title,
                 "quantity" => 1,
                 "price" => $book->price,
-                "author" => $book->author
+                "author" => $book->author,
+                "image" => $book->image
             ];
         }
 
@@ -67,78 +68,85 @@ class CartController extends Controller
         if (empty($cart)) {
             return redirect()->route('client.home')->with('error', 'Giỏ hàng trống!');
         }
-        return view('client.checkout', compact('cart'));
+        $total = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
+        return view('client.checkout', compact('cart', 'total'));
     }
 
-    // Lưu đơn hàng và TRỪ KHO
+    // Lưu đơn hàng, TRỪ KHO và TĂNG LƯỢT BÁN
     public function placeOrder(Request $request)
     {
         $request->validate([
             'fullname' => 'required',
             'phone' => 'required',
             'address' => 'required',
+        ], [
+            'fullname.required' => 'Vui lòng nhập họ tên',
+            'phone.required' => 'Vui lòng nhập số điện thoại',
+            'address.required' => 'Vui lòng nhập địa chỉ',
         ]);
 
         $cart = session()->get('cart');
         if (!$cart) return redirect()->route('client.home');
 
-        DB::transaction(function () use ($cart, $request) {
-            $total = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
+        try {
+            DB::transaction(function () use ($cart, $request) {
+                $total = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
 
-            // 1. Lưu đơn hàng chính
-            $orderId = DB::table('orders')->insertGetId([
-                'customer_name' => $request->fullname,
-                'phone' => $request->phone,
-                'address' => $request->address,
-                'payment_method' => $request->payment_method ?? 'COD',
-                'total_amount' => $total,
-                'status' => 'pending',
-                'created_at' => now(),
-                'updated_at' => now()
-            ]);
-
-            // 2. Lưu chi tiết và TRỪ SỐ LƯỢNG KHO
-            foreach ($cart as $id => $details) {
-                // Lưu vào bảng order_items
-                DB::table('order_items')->insert([
-                    'order_id' => $orderId,
-                    'book_title' => $details['title'],
-                    'quantity' => $details['quantity'],
-                    'price' => $details['price'],
+                // 1. Lưu đơn hàng chính
+                $orderId = DB::table('orders')->insertGetId([
+                    'customer_name' => $request->fullname,
+                    'phone' => $request->phone,
+                    'address' => $request->address,
+                    'payment_method' => $request->payment_method ?? 'COD',
+                    'total_amount' => $total,
+                    'status' => 'pending',
                     'created_at' => now(),
                     'updated_at' => now()
                 ]);
 
-                // PHẦN QUAN TRỌNG: Trừ số lượng sách trong bảng books
-                $book = Book::find($id);
-                if ($book) {
-                    $book->decrement('stock', $details['quantity']);
-                }
-            }
-        });
+                // 2. Lưu chi tiết và xử lý kho/lượt bán
+                foreach ($cart as $id => $details) {
+                    DB::table('order_items')->insert([
+                        'order_id' => $orderId,
+                        'book_title' => $details['title'],
+                        'quantity' => $details['quantity'],
+                        'price' => $details['price'],
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]);
 
-        session()->forget('cart');
-        return redirect()->route('client.home')->with('success', 'Đặt hàng thành công! Số lượng kho đã được cập nhật.');
+                    $book = Book::find($id);
+                    if ($book) {
+                        // TRỪ số lượng tồn kho
+                        $book->decrement('stock', $details['quantity']);
+                        // TĂNG số lượng đã bán (Để hiện thị mục Sách Bán Chạy)
+                        $book->increment('sold', $details['quantity']); 
+                    }
+                }
+            });
+
+            session()->forget('cart');
+            return redirect()->route('client.home')->with('success', 'Đặt hàng thành công! Đơn hàng của bạn đang được xử lý.');
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Có lỗi xảy ra khi đặt hàng: ' . $e->getMessage());
+        }
     }
 
     // Tra cứu đơn hàng
-    public function trackOrder(Request $request) {
-    $orders = collect(); // Tạo một bộ sưu tập trống mặc định
-    
-    if ($request->filled('phone')) {
-        // Đổi ->first() thành ->get() để lấy DANH SÁCH đơn hàng
-        $orders = DB::table('orders')
-            ->where('phone', $request->phone)
-            ->orderBy('created_at', 'desc')
-            ->get();
+    public function trackOrder(Request $request) 
+    {
+        $orders = collect();
+        if ($request->filled('phone')) {
+            $orders = DB::table('orders')
+                ->where('phone', $request->phone)
+                ->orderBy('created_at', 'desc')
+                ->get();
 
-        // Lấy chi tiết sản phẩm cho từng đơn hàng trong danh sách
-        foreach ($orders as $order) {
-            $order->items = DB::table('order_items')->where('order_id', $order->id)->get();
+            foreach ($orders as $order) {
+                $order->items = DB::table('order_items')->where('order_id', $order->id)->get();
+            }
         }
+        return view('client.track_order', compact('orders'));
     }
-    
-    // Đổi biến truyền sang view từ 'order' thành 'orders'
-    return view('client.track_order', compact('orders'));
-}
 }

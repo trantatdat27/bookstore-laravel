@@ -11,25 +11,36 @@ class ClientController extends Controller
     public function index(Request $request)
     {
         $categories = Category::all();
-        $query = Book::query();
+        $query = Book::with('category'); 
 
-        // 1. Lọc theo từ khóa tìm kiếm (Tên sách hoặc Tác giả)
-        if ($request->has('search') && $request->search != '') {
-            $query->where('title', 'like', '%' . $request->search . '%')
-                  ->orWhere('author', 'like', '%' . $request->search . '%');
+        // 1. NẾU NGƯỜI DÙNG CÓ TÌM KIẾM HOẶC LỌC DANH MỤC
+        if ($request->filled('keyword') || $request->filled('category_id')) {
+            if ($request->filled('keyword')) {
+                $keyword = $request->keyword;
+                $query->where(function($q) use ($keyword) {
+                    $q->where('title', 'like', '%' . $keyword . '%')
+                      ->orWhere('author', 'like', '%' . $keyword . '%');
+                });
+            }
+            if ($request->filled('category_id')) {
+                $query->where('category_id', $request->category_id);
+            }
+
+            // Chỉ trả về kết quả lọc (không hiện mục bán chạy nữa cho đỡ rối)
+            $books = $query->latest()->paginate(10);
+            return view('client.index', compact('books', 'categories'));
         }
 
-        // 2. Lọc theo danh mục
-        if ($request->has('category') && $request->category != '') {
-            $query->where('category_id', $request->category);
-        }
+        // 2. NẾU LÀ TRANG CHỦ MẶC ĐỊNH (Không lọc)
+        // Lấy Top 10 cuốn bán chạy nhất (sắp xếp theo cột sold)
+        $bestsellers = Book::with('category')->orderBy('sold', 'desc')->take(10)->get();
 
-        $books = $query->with('category')->get();
+        // Lấy sách mới nhất cho phần còn lại (phân trang)
+        $books = Book::with('category')->latest()->paginate(10);
 
-        return view('client.index', compact('books', 'categories'));
+        return view('client.index', compact('books', 'bestsellers', 'categories'));
     }
 
-    // Xem chi tiết 1 cuốn sách
     public function show($id)
     {
         $book = Book::with('category')->findOrFail($id);

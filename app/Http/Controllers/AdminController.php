@@ -10,11 +10,30 @@ use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller 
 {
-    public function index() {
-        $books = Book::with('category')->get();
-        $categories = Category::all();
-        return view('admin.admin', compact('books', 'categories'));
+    public function index(Request $request) {
+    // Bắt đầu với một query cơ bản (lấy sách kèm danh mục, xếp mới nhất lên đầu)
+    $query = Book::with('category')->latest();
+
+    // 1. Lọc theo Tên sách hoặc Tác giả (dùng keyword)
+    if ($request->has('keyword') && $request->keyword != '') {
+        $keyword = $request->keyword;
+        $query->where(function($q) use ($keyword) {
+            $q->where('title', 'LIKE', '%' . $keyword . '%')
+              ->orWhere('author', 'LIKE', '%' . $keyword . '%');
+        });
     }
+
+    // 2. Lọc theo Danh mục
+    if ($request->has('category_id') && $request->category_id != '') {
+        $query->where('category_id', $request->category_id);
+    }
+
+    // Lấy dữ liệu và phân trang (appends để giữ lại từ khóa trên URL khi bấm sang Trang 2, Trang 3)
+    $books = $query->paginate(10)->appends($request->all());
+    $categories = Category::all();
+
+    return view('admin.admin', compact('books', 'categories'));
+}
 
     public function store(Request $request) {
         // Cập nhật validate thêm trường stock (số lượng)
@@ -24,7 +43,7 @@ class AdminController extends Controller
             'price' => 'required|numeric',
             'stock' => 'required|integer|min:0', // Số lượng phải là số nguyên và >= 0
             'category_id' => 'required',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048'
         ]);
 
         $data = $request->all();
