@@ -1,88 +1,106 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Admin - Quản lý sách</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="container py-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Quản lý sách</h2>
-        <div>
-            <a href="{{ route('categories.index') }}" class="btn btn-secondary">Quản lý danh mục</a>
-            <a href="{{ route('admin.orders') }}" class="btn btn-warning fw-bold text-dark">Quản lý Đơn hàng</a>
+@extends('admin.layout')
+@section('title', 'Quản lý Sách')
+
+@section('content')
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="fw-bold text-dark"><i class="fas fa-book-open text-primary me-2"></i>Quản lý sách</h3>
+</div>
+
+<div class="card mb-5">
+    <div class="card-header bg-white py-3">
+        <h5 class="mb-0 fw-bold"><i class="fas fa-plus-circle text-success me-2"></i>Thêm sách mới</h5>
+    </div>
+    <div class="card-body">
+        <form action="{{ route('books.store') }}" method="POST" enctype="multipart/form-data">
+            @csrf
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" name="title" placeholder="Tên sách" class="form-control" required>
+                </div>
+                <div class="col-md-4">
+                    <input type="text" name="author" placeholder="Tác giả" class="form-control" required>
+                </div>
+                <div class="col-md-2">
+                    <input type="number" name="price" placeholder="Giá bán" class="form-control" required>
+                </div>
+                <div class="col-md-2">
+                    <input type="number" name="stock" placeholder="Số lượng kho" class="form-control" required min="0">
+                </div>
+                
+                <div class="col-md-4">
+                    <select name="category_id" class="form-select" required>
+                        <option value="">-- Chọn danh mục --</option>
+                        @foreach($categories as $category)
+                            <option value="{{ $category->id }}">{{ $category->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <input type="file" name="image" class="form-control" title="Ảnh sản phẩm">
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary w-100 fw-bold"><i class="fas fa-save me-1"></i>Lưu Sách</button>
+                </div>
+                
+                <div class="col-12">
+                    <textarea name="description" placeholder="Mô tả sách (tùy chọn)..." class="form-control" rows="2"></textarea>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3">Ảnh</th>
+                        <th>Tên sách</th>
+                        <th>Tác giả</th>
+                        <th>Danh mục</th>
+                        <th>Giá</th>
+                        <th class="text-center">Kho</th>
+                        <th class="text-center">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($books as $book)
+                    <tr>
+                        <td class="ps-3">
+                            @if($book->image)
+                                <img src="{{ asset($book->image) }}" style="width: 50px; height: 70px; object-fit: cover;" class="rounded border">
+                            @else
+                                <div class="bg-light rounded border d-flex align-items-center justify-content-center text-muted" style="width: 50px; height: 70px; font-size: 10px;">N/A</div>
+                            @endif
+                        </td>
+                        <td class="fw-bold text-dark">{{ $book->title }}</td>
+                        <td class="text-muted">{{ $book->author }}</td>
+                        <td><span class="badge bg-secondary">{{ $book->category->name ?? 'N/A' }}</span></td>
+                        <td class="text-danger fw-bold">{{ number_format($book->price) }}đ</td>
+                        <td class="text-center">
+                            <span class="badge {{ $book->stock <= 5 ? 'bg-danger' : 'bg-info text-dark' }} rounded-pill px-3 py-2">
+                                {{ $book->stock }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <a href="{{ route('books.edit', $book->id) }}" class="btn btn-sm btn-outline-primary me-1" title="Sửa">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form action="{{ route('books.destroy', $book->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa cuốn sách này?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
         </div>
     </div>
-    
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
-
-    <form action="{{ route('books.store') }}" method="POST" enctype="multipart/form-data" class="mb-5 border p-4 bg-white rounded shadow-sm">
-        @csrf
-        <h4 class="mb-3">Thêm sách mới</h4>
-        <div class="row">
-            <div class="col-md-6">
-                <input type="text" name="title" placeholder="Tên sách" class="form-control mb-2" required>
-                <input type="text" name="author" placeholder="Tác giả" class="form-control mb-2" required>
-                <input type="number" name="price" placeholder="Giá (VNĐ)" class="form-control mb-2" required>
-                <input type="number" name="stock" placeholder="Số lượng kho" class="form-control mb-2" required min="0">
-                
-                <select name="category_id" class="form-control mb-2" required>
-                    <option value="">Chọn danh mục</option>
-                    @foreach($categories as $category)
-                        <option value="{{ $category->id }}">{{ $category->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-md-6">
-                <textarea name="description" placeholder="Mô tả" class="form-control mb-2" rows="4"></textarea>
-                <input type="file" name="image" class="form-control mb-2">
-            </div>
-        </div>
-        <button type="submit" class="btn btn-primary w-100 mt-2">Thêm sách</button>
-    </form>
-
-    <table class="table table-bordered shadow-sm bg-white">
-        <thead class="table-dark">
-            <tr>
-                <th>Ảnh</th>
-                <th>Tên</th>
-                <th>Tác giả</th>
-                <th>Danh mục</th>
-                <th>Giá</th>
-                <th>Kho</th> <th>Thao tác</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($books as $book)
-            <tr>
-                <td>
-                    @if($book->image)
-                        <img src="{{ asset($book->image) }}" width="60" class="img-thumbnail">
-                    @else
-                        <span class="text-muted small">N/A</span>
-                    @endif
-                </td>
-                <td class="fw-bold">{{ $book->title }}</td>
-                <td>{{ $book->author }}</td>
-                <td>{{ $book->category->name ?? 'N/A' }}</td>
-                <td>{{ number_format($book->price) }}đ</td>
-                <td class="text-center">
-                    <span class="badge {{ $book->stock <= 5 ? 'bg-danger' : 'bg-info' }}">
-                        {{ $book->stock }}
-                    </span>
-                </td>
-                <td>
-                    <a href="{{ route('books.edit', $book->id) }}" class="btn btn-sm btn-warning">Sửa</a>
-                    <form action="{{ route('books.destroy', $book->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Xóa sách?')">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-sm btn-danger">Xóa</button>
-                    </form>
-                </td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
-</body>
-</html>
+</div>
+@endsection

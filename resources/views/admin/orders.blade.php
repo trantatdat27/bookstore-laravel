@@ -1,86 +1,83 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Admin - Quản lý đơn hàng</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
+@extends('admin.layout')
+@section('title', 'Quản lý Đơn hàng')
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-    <div class="container">
-        <a class="navbar-brand" href="#">Bookstore Admin</a>
-        <div class="navbar-nav">
-            <a class="nav-link" href="{{ route('admin.index') }}">Sách</a>
-            <a class="nav-link active" href="{{ route('admin.orders') }}">Đơn hàng</a>
-        </div>
+@section('content')
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="fw-bold text-dark"><i class="fas fa-shopping-cart text-primary me-2"></i>Danh sách Đơn hàng</h3>
+</div>
+
+@foreach($orders as $order)
+<div class="card mb-4 shadow-sm border-0 rounded-4">
+    <div class="card-header bg-white border-bottom py-3">
+        <h5 class="mb-0 text-primary fw-bold">
+            <i class="fas fa-hashtag me-1"></i> Đơn hàng #{{ $order->id }} - Khách hàng: {{ $order->customer_name }}
+        </h5>
     </div>
-</nav>
-
-<div class="container py-5">
-    <h2 class="mb-4">Danh sách Đơn hàng</h2>
-    
-    @foreach($orders as $order)
-    <div class="card mb-4 shadow-sm">
-        <div class="card-body">
-            <h5 class="text-primary mb-3">Đơn hàng #{{ $order->id }} - Khách hàng: {{ $order->customer_name }}</h5>
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <p class="mb-1"><strong>📞 SĐT:</strong> {{ $order->phone }}</p>
-                    <p class="mb-1"><strong>🏠 Địa chỉ:</strong> {{ $order->address }}</p>
-                </div>
-                <div class="col-md-6">
-                    <p class="mb-1"><strong>💳 Thanh toán:</strong> {{ $order->payment_method }}</p>
-                    <p class="mb-1"><strong>🔔 Trạng thái:</strong> 
-                        <span class="badge @if($order->status == 'pending') bg-warning @elseif($order->status == 'shipping') bg-primary @else bg-success @endif">
-                            {{ $order->status }}
-                        </span>
-                    </p>
-                </div>
+    <div class="card-body p-4">
+        <div class="row mb-4 bg-light p-3 rounded-3 mx-0">
+            <div class="col-md-6 border-end">
+                <p class="mb-2"><strong class="text-dark"><i class="fas fa-phone-alt text-muted me-2"></i>SĐT:</strong> {{ $order->phone }}</p>
             </div>
+            <div class="col-md-6 ps-md-4">
+                <p class="mb-2"><strong class="text-dark"><i class="fas fa-map-marker-alt text-muted me-2"></i>Địa chỉ:</strong> {{ $order->address }}</p>
+            </div>
+        </div>
 
-            <table class="table table-bordered bg-white">
+        <h6 class="fw-bold mb-3"><i class="fas fa-list text-muted me-2"></i>Chi tiết sản phẩm:</h6>
+        <div class="table-responsive mb-3">
+            <table class="table table-bordered align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th>Sản phẩm</th>
-                        <th>Đơn giá</th>
-                        <th>Số lượng</th>
-                        <th>Thành tiền</th>
+                        <th>Tên sách</th>
+                        <th class="text-center" style="width: 100px;">Số lượng</th>
+                        <th class="text-end" style="width: 150px;">Đơn giá</th>
+                        <th class="text-end" style="width: 150px;">Thành tiền</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($order->items as $item)
                     <tr>
-                        <td>{{ $item->book_title }}</td>
-                        <td>{{ number_format($item->price) }}đ</td>
-                        <td>x{{ $item->quantity }}</td>
-                        <td>{{ number_format($item->price * $item->quantity) }}đ</td>
+                        <td class="fw-bold text-dark">{{ $item->book_title }}</td>
+                        <td class="text-center">{{ $item->quantity }}</td>
+                        <td class="text-end text-muted">{{ number_format($item->price) }}đ</td>
+                        <td class="text-end fw-bold text-danger">{{ number_format($item->price * $item->quantity) }}đ</td>
                     </tr>
                     @endforeach
                 </tbody>
             </table>
+        </div>
 
-            <div class="d-flex justify-content-between align-items-center mt-3">
-                <form action="{{ route('admin.orders.update', $order->id) }}" method="POST" class="d-flex gap-2">
-                    @csrf
-                    <select name="status" class="form-select form-select-sm" style="width: 150px;">
-                        <option value="pending" {{ $order->status == 'pending' ? 'selected' : '' }}>Chờ xử lý</option>
-                        <option value="shipping" {{ $order->status == 'shipping' ? 'selected' : '' }}>Đang giao</option>
-                        <option value="completed" {{ $order->status == 'completed' ? 'selected' : '' }}>Hoàn thành</option>
-                        <option value="canceled" {{ $order->status == 'canceled' ? 'selected' : '' }}>Hủy đơn</option>
-                    </select>
-                    <button type="submit" class="btn btn-sm btn-dark">Cập nhật trạng thái</button>
-                </form>
-                <div class="text-danger fw-bold fs-5">
-                    Tổng cộng: {{ number_format($order->total_amount) }} VNĐ
-                </div>
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-end align-items-md-center mt-4 border-top pt-3">
+            <form action="{{ route('admin.orders.update', $order->id) }}" method="POST" class="d-flex align-items-center gap-2 mb-3 mb-md-0 w-100 w-md-auto">
+                @csrf
+                <label class="fw-bold text-muted text-nowrap">Trạng thái:</label>
+                <select name="status" class="form-select fw-bold 
+                    {{ $order->status == 'pending' ? 'text-warning' : '' }}
+                    {{ $order->status == 'shipping' ? 'text-info' : '' }}
+                    {{ $order->status == 'completed' ? 'text-success' : '' }}
+                    {{ $order->status == 'canceled' ? 'text-danger' : '' }}
+                " style="min-width: 160px;">
+                    <option value="pending" {{ $order->status == 'pending' ? 'selected' : '' }}>⏳ Chờ xử lý</option>
+                    <option value="shipping" {{ $order->status == 'shipping' ? 'selected' : '' }}>🚚 Đang giao</option>
+                    <option value="completed" {{ $order->status == 'completed' ? 'selected' : '' }}>✅ Hoàn thành</option>
+                    <option value="canceled" {{ $order->status == 'canceled' ? 'selected' : '' }}>❌ Hủy đơn</option>
+                </select>
+                <button type="submit" class="btn btn-dark fw-bold text-nowrap"><i class="fas fa-sync-alt me-1"></i> Cập nhật</button>
+            </form>
+            
+            <div class="text-end w-100 w-md-auto">
+                <span class="text-muted d-block mb-1">Tổng cộng:</span>
+                <span class="text-danger fw-bold fs-4">{{ number_format($order->total_amount) }} VNĐ</span>
             </div>
         </div>
     </div>
-    @endforeach
-
-    @if(count($orders) == 0)
-        <div class="alert alert-info text-center">Chưa có đơn hàng nào được đặt.</div>
-    @endif
 </div>
-</body>
-</html>
+@endforeach
+
+@if(count($orders) == 0)
+    <div class="alert alert-info text-center py-5 border-0 shadow-sm rounded-4 bg-white">
+        <i class="fas fa-box-open display-1 text-muted mb-3 opacity-25 d-block"></i>
+        <h4 class="text-muted">Chưa có đơn hàng nào</h4>
+    </div>
+@endif
+@endsection

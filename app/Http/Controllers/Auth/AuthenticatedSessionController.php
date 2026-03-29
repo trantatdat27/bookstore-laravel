@@ -29,7 +29,14 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(RouteServiceProvider::HOME);
+        // Kiểm tra quyền của người dùng vừa đăng nhập
+        if ($request->user()->role === 'admin') {
+            // Nếu là Admin -> Đẩy vào trang quản trị (route admin.index của bạn)
+            return redirect()->route('admin.index');
+        }
+
+        // Nếu là Khách thường -> Đẩy về trang chủ (route client.home của bạn)
+        return redirect()->route('client.home');
     }
 
     /**

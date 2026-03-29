@@ -23,8 +23,13 @@ Route::get('/checkout', [CartController::class, 'checkout'])->name('cart.checkou
 Route::post('/place-order', [CartController::class, 'placeOrder'])->name('cart.place_order');
 Route::get('/track-order', [CartController::class, 'trackOrder'])->name('cart.track');
 
-// --- Giao diện Quản trị ---
-Route::prefix('admin')->group(function () {
+// --- Trang Dashboard (Mặc định của Breeze sau khi đăng nhập) ---
+Route::get('/dashboard', function () {
+    return view('dashboard'); 
+})->middleware(['auth', 'verified'])->name('dashboard');
+
+// --- Giao diện Quản trị (ĐÃ BẢO MẬT: Phải đăng nhập mới được vào) ---
+Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::get('/books', [AdminController::class, 'index'])->name('admin.index');
     Route::post('/books', [AdminController::class, 'store'])->name('books.store');
     Route::get('/books/{id}/edit', [AdminController::class, 'edit'])->name('books.edit');
@@ -38,3 +43,6 @@ Route::prefix('admin')->group(function () {
     Route::get('/orders', [AdminController::class, 'orderIndex'])->name('admin.orders');
     Route::post('/orders/{id}/update', [AdminController::class, 'updateOrderStatus'])->name('admin.orders.update');
 });
+
+// --- Nhúng các Route Đăng nhập/Đăng ký của Laravel Breeze ---
+require __DIR__.'/auth.php';
