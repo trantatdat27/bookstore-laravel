@@ -12,4 +12,11 @@ class CategoryController extends Controller {
         Category::create($request->all());
         return redirect()->back()->with('success', 'Thêm danh mục thành công!');
     }
+    public function destroy($id)
+{
+    $category = Category::findOrFail($id);
+    $category->delete();
+
+    return redirect()->back()->with('success', 'Đã xóa danh mục thành công!');
+}
 }

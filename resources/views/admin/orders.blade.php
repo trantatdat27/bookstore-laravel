@@ -8,11 +8,18 @@
 
 @foreach($orders as $order)
 <div class="card mb-4 shadow-sm border-0 rounded-4">
-    <div class="card-header bg-white border-bottom py-3">
-        <h5 class="mb-0 text-primary fw-bold">
-            <i class="fas fa-hashtag me-1"></i> Đơn hàng #{{ $order->id }} - Khách hàng: {{ $order->customer_name }}
-        </h5>
-    </div>
+    <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+    <h5 class="mb-0 text-primary fw-bold">
+        <i class="fas fa-hashtag me-1"></i> Đơn hàng #{{ $order->id }} - {{ $order->customer_name }}
+    </h5>
+    <form action="{{ route('admin.orders.destroy', $order->id) }}" method="POST" onsubmit="return confirm('Xóa vĩnh viễn đơn hàng này?')">
+        @csrf
+        @method('DELETE')
+        <button type="submit" class="btn btn-sm btn-outline-danger border-0">
+            <i class="fas fa-trash"></i> Xóa đơn
+        </button>
+    </form>
+</div>
     <div class="card-body p-4">
         <div class="row mb-4 bg-light p-3 rounded-3 mx-0">
             <div class="col-md-6 border-end">
