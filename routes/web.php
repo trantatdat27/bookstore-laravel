@@ -48,6 +48,9 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::get('/track-order', [CartController::class, 'trackOrder'])
     ->middleware('auth') // Chỉ người dùng đã đăng nhập mới xem được lịch sử
     ->name('cart.track');
+
+    Route::put('/order/cancel/{id}', [CartController::class, 'cancelOrder'])->name('cart.cancel')->middleware('auth');
+    
 });
 
 require __DIR__.'/auth.php';

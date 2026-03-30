@@ -39,18 +39,16 @@
             <div class="col-lg-10 mx-auto">
                 @foreach($orders as $order)
                     @php
-                        // LOGIC XỬ LÝ TRẠNG THÁI (FIX LỖI HIỆN SAI)
-                        $statusData = [
-                            'pending'   => ['class' => 'bg-warning text-dark', 'label' => 'Chờ xử lý', 'icon' => 'fa-clock'],
-                            'confirmed' => ['class' => 'bg-primary text-white', 'label' => 'Đã xác nhận', 'icon' => 'fa-check-double'],
-                            'shipping'  => ['class' => 'bg-info text-white', 'label' => 'Đang giao hàng', 'icon' => 'fa-truck'],
-                            'completed' => ['class' => 'bg-success text-white', 'label' => 'Đã hoàn thành', 'icon' => 'fa-check-circle'],
-                            'canceled' => ['class' => 'bg-danger text-white', 'label' => 'Đã hủy', 'icon' => 'fa-times-circle'],
-                        ];
-                        
-                        // Lấy cấu hình theo status trong DB, nếu Admin gõ sai thì mặc định là pending
-                        $currentStatus = $statusData[$order->status] ?? $statusData['pending'];
-                    @endphp
+    $statusData = [
+        'pending'   => ['class' => 'bg-warning text-dark', 'label' => 'Chờ xử lý', 'icon' => 'fa-clock'],
+        'confirmed' => ['class' => 'bg-primary text-white', 'label' => 'Đã xác nhận', 'icon' => 'fa-check-double'],
+        'shipping'  => ['class' => 'bg-info text-white', 'label' => 'Đang giao hàng', 'icon' => 'fa-truck'],
+        'completed' => ['class' => 'bg-success text-white', 'label' => 'Đã hoàn thành', 'icon' => 'fa-check-circle'],
+        'canceled'  => ['class' => 'bg-danger text-white', 'label' => 'Đã hủy', 'icon' => 'fa-times-circle'],
+    ];
+    // Lấy status từ DB, nếu không khớp thì mặc định pending
+    $currentStatus = $statusData[$order->status] ?? $statusData['pending'];
+@endphp
 
                     <div class="card card-order shadow-sm rounded-4 mb-4 overflow-hidden">
                         <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
@@ -93,16 +91,27 @@
                         </div>
 
                         <div class="card-footer bg-light border-0 py-3 px-4">
-                            <div class="row align-items-center">
-                                <div class="col-md-7">
-                                    <small class="text-muted"><i class="fas fa-map-marker-alt me-1"></i> Giao đến: <strong>{{ $order->address }}</strong></small>
-                                </div>
-                                <div class="col-md-5 text-md-end">
-                                    <span class="text-muted me-2">Tổng thanh toán:</span>
-                                    <span class="fs-4 fw-bold text-danger">{{ number_format($order->total_amount) }}đ</span>
-                                </div>
-                            </div>
-                        </div>
+    <div class="row align-items-center">
+        <div class="col-md-7">
+            <small class="text-muted"><i class="fas fa-map-marker-alt me-1"></i> Giao đến: <strong>{{ $order->address }}</strong></small>
+        </div>
+        <div class="col-md-5 text-md-end">
+    {{-- CHỈ hiện nút Hủy nếu trạng thái đơn hàng là 'pending' (Chờ xử lý) --}}
+    @if($order->status == 'pending')
+        <form action="{{ route('cart.cancel', $order->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')">
+            @csrf
+            @method('PUT')
+            <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3 me-2">
+                <i class="fas fa-times me-1"></i> Hủy đơn
+            </button>
+        </form>
+    @endif
+    
+    <span class="text-muted me-2">Tổng thanh toán:</span>
+    <span class="fs-4 fw-bold text-danger">{{ number_format($order->total_amount) }}đ</span>
+</div>
+    </div>
+</div>
                     </div>
                 @endforeach
             </div>

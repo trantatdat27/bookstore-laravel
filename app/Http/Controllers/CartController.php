@@ -162,4 +162,23 @@ class CartController extends Controller
 
     return view('client.track_order', compact('orders'));
 }
+
+// Hàm xử lý hủy đơn hàng từ phía khách hàng (Client)
+    public function cancelOrder($id)
+{
+    // Tìm đơn hàng của đúng user
+    $order = DB::table('orders')->where('id', $id)->where('user_id', auth()->id())->first();
+
+    if (!$order || $order->status !== 'pending') {
+        return redirect()->back()->with('error', 'Không thể hủy đơn hàng này.');
+    }
+
+    // Cập nhật trạng thái
+    DB::table('orders')->where('id', $id)->update([
+        'status' => 'canceled',
+        'updated_at' => now()
+    ]);
+
+    return redirect()->back()->with('success', 'Đã hủy đơn hàng thành công.');
+}
 }
