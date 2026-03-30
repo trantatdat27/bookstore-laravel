@@ -68,8 +68,8 @@
     {{-- 1. Trạng thái Chờ xử lý --}}
     <option value="pending" {{ $order->status == 'pending' ? 'selected' : '' }}>⏳ Chờ xử lý</option>
     
-    {{-- 2. Trạng thái Đã xác nhận (SỬA TẠI ĐÂY: value phải là confirmed) --}}
-    <option value="confirmed" {{ $order->status == 'confirmed' ? 'selected' : '' }}>✅ Đã xác nhận</option>
+    {{-- 2. Trạng thái Đã xác nhận  --}}
+    <option value="confirmed" {{ $order->status == 'confirmed' ? 'selected' : '' }}>🔵 Đã xác nhận</option>
     
     {{-- 3. Trạng thái Đang giao --}}
     <option value="shipping" {{ $order->status == 'shipping' ? 'selected' : '' }}>🚚 Đang giao</option>
