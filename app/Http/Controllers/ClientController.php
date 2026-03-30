@@ -31,9 +31,12 @@ class ClientController extends Controller
             return view('client.index', compact('books', 'categories'));
         }
 
-        // 2. NẾU LÀ TRANG CHỦ MẶC ĐỊNH (Không lọc)
+        // 2. NẾU LÀ TRANG CHỦ MẶC ĐỊNH 
         // Lấy Top 10 cuốn bán chạy nhất (sắp xếp theo cột sold)
-        $bestsellers = Book::with('category')->orderBy('sold', 'desc')->take(10)->get();
+        $bestsellers = Book::where('sold', '>', 0) // Chỉ lấy sách đã có lượt bán
+    ->orderBy('sold', 'desc')               // Sắp xếp từ cao đến thấp
+    ->take(5)                               // Lấy số lượng mong muốn (ví dụ 5 cuốn)
+    ->get();
 
         // Lấy sách mới nhất cho phần còn lại (phân trang)
         $books = Book::with('category')->latest()->paginate(10);
