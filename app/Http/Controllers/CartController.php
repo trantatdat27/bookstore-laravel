@@ -10,11 +10,18 @@ class CartController extends Controller
 {
     // Xem giỏ hàng
     public function index()
-    {
-        $cart = session()->get('cart', []);
-        $total = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
-        return view('client.cart', compact('cart', 'total'));
+{
+    $cart = session()->get('cart', []);
+
+    // Thêm dòng tính tổng tiền này
+    $total = 0;
+    foreach($cart as $item) {
+        $total += $item['price'] * $item['quantity'];
     }
+
+    // Truyền cả $cart và $total sang view
+    return view('client.cart', compact('cart', 'total'));
+}
 
     // Thêm sản phẩm
     public function add($id)
@@ -94,6 +101,7 @@ class CartController extends Controller
 
                 // 1. Lưu đơn hàng chính
                 $orderId = DB::table('orders')->insertGetId([
+                    'user_id' => auth()->id(), // THÊM DÒNG NÀY: Lưu ID người mua
                     'customer_name' => $request->fullname,
                     'phone' => $request->phone,
                     'address' => $request->address,
@@ -134,19 +142,24 @@ class CartController extends Controller
     }
 
     // Tra cứu đơn hàng
-    public function trackOrder(Request $request) 
-    {
-        $orders = collect();
-        if ($request->filled('phone')) {
-            $orders = DB::table('orders')
-                ->where('phone', $request->phone)
-                ->orderBy('created_at', 'desc')
-                ->get();
-
-            foreach ($orders as $order) {
-                $order->items = DB::table('order_items')->where('order_id', $order->id)->get();
-            }
-        }
-        return view('client.track_order', compact('orders'));
+    public function trackOrder() 
+{
+    // 1. Kiểm tra nếu chưa đăng nhập thì bắt đăng nhập
+    if (!auth()->check()) {
+        return redirect()->route('login')->with('error', 'Vui lòng đăng nhập để xem lịch sử đơn hàng.');
     }
+
+    // 2. Lấy danh sách đơn hàng của User đang đăng nhập
+    $orders = DB::table('orders')
+        ->where('user_id', auth()->id()) // Lọc theo ID tài khoản
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+    // 3. Lấy chi tiết từng sản phẩm trong đơn hàng
+    foreach ($orders as $order) {
+        $order->items = DB::table('order_items')->where('order_id', $order->id)->get();
+    }
+
+    return view('client.track_order', compact('orders'));
+}
 }

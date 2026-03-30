@@ -1,89 +1,111 @@
 @extends('client.layout')
-@section('title', 'Tra cứu đơn hàng')
+@section('title', 'Lịch sử đơn hàng')
+
+@section('custom_css')
+<style>
+    .card-order { transition: all 0.3s ease; border: 1px solid #edf2f7; }
+    .card-order:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.05) !important; }
+    .status-badge { font-size: 0.85rem; padding: 6px 16px; font-weight: 600; }
+</style>
+@endsection
 
 @section('content')
-<div class="container py-5">
-    <div class="mb-4">
-        <a href="{{ route('client.home') }}" class="btn btn-outline-secondary rounded-pill px-4 bg-white shadow-sm border-0">
-            <i class="fas fa-arrow-left me-2"></i>Quay lại cửa hàng
-        </a>
-    </div>
-    
-    <div class="text-center mb-5">
-        <i class="fas fa-search-location display-4 text-primary mb-3"></i>
-        <h2 class="fw-bold text-dark">Tra cứu lịch sử đơn hàng</h2>
-        <p class="text-muted">Nhập số điện thoại bạn đã dùng để đặt hàng để kiểm tra trạng thái</p>
-    </div>
-    
-    <form action="{{ route('cart.track') }}" method="GET" class="mx-auto mb-5" style="max-width: 600px;">
-        <div class="input-group shadow-sm border border-primary rounded-pill bg-white p-1">
-            <span class="input-group-text bg-transparent border-0 ms-2"><i class="fas fa-phone-alt text-muted"></i></span>
-            <input type="text" name="phone" class="form-control border-0 shadow-none bg-transparent" placeholder="Nhập số điện thoại..." value="{{ request('phone') }}" required>
-            <button class="btn btn-primary rounded-pill px-4 fw-bold" type="submit">Tìm kiếm <i class="fas fa-search ms-1"></i></button>
+<div class="container py-5" style="min-height: 70vh;">
+    <div class="d-flex align-items-center mb-4">
+        <div class="bg-primary text-white rounded-3 p-3 me-3">
+            <i class="fas fa-history fs-4"></i>
         </div>
-    </form>
+        <div>
+            <h2 class="fw-bold mb-0">Lịch sử đơn hàng</h2>
+            <p class="text-muted mb-0">Theo dõi trạng thái các đơn hàng bạn đã đặt</p>
+        </div>
+    </div>
 
-    @if(isset($orders) && $orders->count() > 0)
-        <div class="mx-auto" style="max-width: 800px;">
-            <div class="alert alert-success shadow-sm rounded-3 mb-4 border-0">
-                <i class="fas fa-check-circle me-2"></i>Tìm thấy <strong>{{ $orders->count() }}</strong> đơn hàng cho số điện thoại: <span class="fw-bold">{{ request('phone') }}</span>
-            </div>
-            
-            @foreach($orders as $order)
-                <div class="card shadow-sm mb-4 border-0 rounded-4 overflow-hidden">
-                    <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
-                        <span class="fs-5 text-dark"><i class="fas fa-hashtag text-muted me-1"></i>Mã đơn: <strong>{{ $order->id }}</strong></span>
-                        @php
-                            $badgeClass = 'bg-info text-dark'; $icon = 'fa-spinner';
-                            if($order->status == 'pending') { $badgeClass = 'bg-warning text-dark'; $icon = 'fa-clock'; }
-                            elseif($order->status == 'completed') { $badgeClass = 'bg-success'; $icon = 'fa-check-double'; }
-                            elseif($order->status == 'cancelled') { $badgeClass = 'bg-danger'; $icon = 'fa-times-circle'; }
-                        @endphp
-                        <span class="badge {{ $badgeClass }} px-3 py-2 rounded-pill fs-6 shadow-sm"><i class="fas {{ $icon }} me-1"></i> {{ strtoupper($order->status) }}</span>
-                    </div>
-                    <div class="card-body p-4">
-                        <div class="row mb-4 bg-light p-3 rounded-3 mx-0">
-                            <div class="col-sm-6 mb-2 mb-sm-0">
-                                <small class="text-muted d-block"><i class="fas fa-user me-1"></i> Khách hàng:</small>
-                                <strong class="fs-5">{{ $order->customer_name }}</strong>
-                            </div>
-                            <div class="col-sm-6 text-sm-end">
-                                <small class="text-muted d-block"><i class="fas fa-calendar-alt me-1"></i> Ngày đặt:</small>
-                                <span class="fw-bold">{{ date('d/m/Y H:i', strtotime($order->created_at)) }}</span>
-                            </div>
-                        </div>
-                        <div class="table-responsive">
-                            <table class="table table-borderless table-sm border-bottom">
-                                <thead class="text-muted border-bottom">
-                                    <tr><th>Sản phẩm</th><th class="text-center">Số lượng</th><th class="text-end">Giá</th></tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($order->items as $item)
-                                        <tr>
-                                            <td class="py-2 fw-bold text-dark">{{ $item->book_title }}</td>
-                                            <td class="text-center py-2"><span class="badge bg-secondary rounded-pill">x{{ $item->quantity }}</span></td>
-                                            <td class="text-end py-2 text-primary fw-bold">{{ number_format($item->price) }}đ</td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end mt-3">
-                            <div class="mb-3 mb-md-0 text-muted small" style="max-width: 60%;"><i class="fas fa-map-marker-alt text-danger me-1"></i> Giao đến: {{ $order->address }}</div>
-                            <div class="text-md-end">
-                                <span class="text-muted d-block mb-1">Tổng cộng</span>
-                                <h4 class="text-danger mb-0 fw-bold">{{ number_format($order->total_amount) }}đ</h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            @endforeach
+    @if(session('success'))
+        <div class="alert alert-success border-0 shadow-sm rounded-3 mb-4">
+            <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
         </div>
-    @elseif(request()->has('phone'))
-        <div class="alert alert-danger text-center mx-auto shadow-sm border-0 rounded-4 py-4" style="max-width: 600px;">
-            <i class="fas fa-exclamation-circle display-4 mb-3 opacity-50"></i>
-            <h5 class="fw-bold mb-0">Không tìm thấy đơn hàng nào!</h5>
-            <p class="mb-0 mt-2">Vui lòng kiểm tra lại số điện thoại hoặc đặt mua sách mới.</p>
+    @endif
+
+    @if($orders->isEmpty())
+        <div class="text-center py-5 bg-white shadow-sm rounded-4 border">
+            <i class="fas fa-box-open display-1 text-muted mb-3 opacity-25"></i>
+            <h4 class="text-dark fw-bold">Chưa có đơn hàng nào</h4>
+            <p class="text-muted mb-4">Hãy khám phá kho sách và chọn cho mình những cuốn sách yêu thích nhé!</p>
+            <a href="{{ route('client.home') }}" class="btn btn-primary rounded-pill px-5 shadow-sm">Mua sắm ngay</a>
+        </div>
+    @else
+        <div class="row">
+            <div class="col-lg-10 mx-auto">
+                @foreach($orders as $order)
+                    @php
+                        // LOGIC XỬ LÝ TRẠNG THÁI (FIX LỖI HIỆN SAI)
+                        $statusData = [
+                            'pending'   => ['class' => 'bg-warning text-dark', 'label' => 'Chờ xử lý', 'icon' => 'fa-clock'],
+                            'confirmed' => ['class' => 'bg-primary text-white', 'label' => 'Đã xác nhận', 'icon' => 'fa-check-double'],
+                            'shipping'  => ['class' => 'bg-info text-white', 'label' => 'Đang giao hàng', 'icon' => 'fa-truck'],
+                            'completed' => ['class' => 'bg-success text-white', 'label' => 'Đã hoàn thành', 'icon' => 'fa-check-circle'],
+                            'canceled' => ['class' => 'bg-danger text-white', 'label' => 'Đã hủy', 'icon' => 'fa-times-circle'],
+                        ];
+                        
+                        // Lấy cấu hình theo status trong DB, nếu Admin gõ sai thì mặc định là pending
+                        $currentStatus = $statusData[$order->status] ?? $statusData['pending'];
+                    @endphp
+
+                    <div class="card card-order shadow-sm rounded-4 mb-4 overflow-hidden">
+                        <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="text-muted small text-uppercase fw-bold">Mã đơn hàng:</span>
+                                <span class="fw-bold text-primary ms-1">#{{ $order->id }}</span>
+                                <span class="mx-2 text-silver">|</span>
+                                <span class="text-muted small"><i class="far fa-calendar-alt me-1"></i>{{ date('d/m/Y H:i', strtotime($order->created_at)) }}</span>
+                            </div>
+                            <span class="badge rounded-pill status-badge {{ $currentStatus['class'] }}">
+                                <i class="fas {{ $currentStatus['icon'] }} me-1"></i>
+                                {{ $currentStatus['label'] }}
+                            </span>
+                        </div>
+                        
+                        <div class="card-body p-4">
+                            <div class="table-responsive">
+                                <table class="table table-borderless align-middle mb-0">
+                                    <thead>
+                                        <tr class="text-muted small border-bottom">
+                                            <th class="pb-2">Sản phẩm</th>
+                                            <th class="pb-2 text-center">Số lượng</th>
+                                            <th class="pb-2 text-end">Thành tiền</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($order->items as $item)
+                                        <tr>
+                                            <td class="py-3">
+                                                <div class="fw-bold text-dark">{{ $item->book_title }}</div>
+                                                <small class="text-muted">{{ number_format($item->price) }}đ</small>
+                                            </td>
+                                            <td class="py-3 text-center">x{{ $item->quantity }}</td>
+                                            <td class="py-3 text-end fw-bold">{{ number_format($item->price * $item->quantity) }}đ</td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="card-footer bg-light border-0 py-3 px-4">
+                            <div class="row align-items-center">
+                                <div class="col-md-7">
+                                    <small class="text-muted"><i class="fas fa-map-marker-alt me-1"></i> Giao đến: <strong>{{ $order->address }}</strong></small>
+                                </div>
+                                <div class="col-md-5 text-md-end">
+                                    <span class="text-muted me-2">Tổng thanh toán:</span>
+                                    <span class="fs-4 fw-bold text-danger">{{ number_format($order->total_amount) }}đ</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
         </div>
     @endif
 </div>

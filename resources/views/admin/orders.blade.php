@@ -59,16 +59,27 @@
                 @csrf
                 <label class="fw-bold text-muted text-nowrap">Trạng thái:</label>
                 <select name="status" class="form-select fw-bold 
-                    {{ $order->status == 'pending' ? 'text-warning' : '' }}
-                    {{ $order->status == 'shipping' ? 'text-info' : '' }}
-                    {{ $order->status == 'completed' ? 'text-success' : '' }}
-                    {{ $order->status == 'canceled' ? 'text-danger' : '' }}
-                " style="min-width: 160px;">
-                    <option value="pending" {{ $order->status == 'pending' ? 'selected' : '' }}>⏳ Chờ xử lý</option>
-                    <option value="shipping" {{ $order->status == 'shipping' ? 'selected' : '' }}>🚚 Đang giao</option>
-                    <option value="completed" {{ $order->status == 'completed' ? 'selected' : '' }}>✅ Hoàn thành</option>
-                    <option value="canceled" {{ $order->status == 'canceled' ? 'selected' : '' }}>❌ Hủy đơn</option>
-                </select>
+    {{ $order->status == 'pending' ? 'text-warning' : '' }}
+    {{ $order->status == 'confirmed' ? 'text-primary' : '' }} 
+    {{ $order->status == 'shipping' ? 'text-info' : '' }}
+    {{ $order->status == 'completed' ? 'text-success' : '' }}
+    {{ $order->status == 'canceled' ? 'text-danger' : '' }}
+" style="min-width: 160px;">
+    {{-- 1. Trạng thái Chờ xử lý --}}
+    <option value="pending" {{ $order->status == 'pending' ? 'selected' : '' }}>⏳ Chờ xử lý</option>
+    
+    {{-- 2. Trạng thái Đã xác nhận (SỬA TẠI ĐÂY: value phải là confirmed) --}}
+    <option value="confirmed" {{ $order->status == 'confirmed' ? 'selected' : '' }}>✅ Đã xác nhận</option>
+    
+    {{-- 3. Trạng thái Đang giao --}}
+    <option value="shipping" {{ $order->status == 'shipping' ? 'selected' : '' }}>🚚 Đang giao</option>
+    
+    {{-- 4. Trạng thái Hoàn thành --}}
+    <option value="completed" {{ $order->status == 'completed' ? 'selected' : '' }}>✅ Hoàn thành</option>
+    
+    {{-- 5. Trạng thái Hủy đơn --}}
+    <option value="canceled" {{ $order->status == 'canceled' ? 'selected' : '' }}>❌ Hủy đơn</option>
+</select>
                 <button type="submit" class="btn btn-dark fw-bold text-nowrap"><i class="fas fa-sync-alt me-1"></i> Cập nhật</button>
             </form>
             

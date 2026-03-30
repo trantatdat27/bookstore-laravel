@@ -44,6 +44,10 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::get('/orders', [AdminController::class, 'orderIndex'])->name('admin.orders');
     Route::post('/orders/{id}/update', [AdminController::class, 'updateOrderStatus'])->name('admin.orders.update');
     Route::delete('/orders/{id}', [AdminController::class, 'orderDestroy'])->name('admin.orders.destroy');
+
+    Route::get('/track-order', [CartController::class, 'trackOrder'])
+    ->middleware('auth') // Chỉ người dùng đã đăng nhập mới xem được lịch sử
+    ->name('cart.track');
 });
 
 require __DIR__.'/auth.php';
