@@ -26,39 +26,69 @@
     </div>
 
     <div class="col-md-8">
-    <div class="card shadow-sm">
-        <div class="card-header bg-white py-3">
-            <h5 class="mb-0 fw-bold"><i class="fas fa-list me-2 text-dark"></i>Danh sách hiện có</h5>
-        </div>
-        <div class="card-body p-0">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th class="ps-4">ID</th>
-                        <th>Tên danh mục</th>
-                        <th>Ngày tạo</th>
-                        <th class="text-end pe-4">Thao tác</th> </tr>
-                </thead>
-                <tbody>
-                    @forelse($categories as $cat)
-                    <tr>
-                        <td class="ps-4 text-muted">#{{ $cat->id }}</td>
-                        <td><strong class="text-dark">{{ $cat->name }}</strong></td>
-                        <td class="text-muted">{{ $cat->created_at->format('d/m/Y') }}</td>
-                        <td class="text-end pe-4">
-                            <form action="{{ route('categories.destroy', $cat->id) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa danh mục này?')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-outline-danger btn-sm border-0">
-                                    <i class="fas fa-trash-alt"></i> Xóa
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                    
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-list me-2 text-dark"></i>Danh sách hiện có</h5>
+
+                    <form action="{{ route('categories.index') }}" method="GET" id="searchForm">
+                        <div class="input-group input-group-sm" style="width: 280px;">
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class="fas fa-search text-muted"></i>
+                            </span>
+                            <input
+                                type="text"
+                                name="search"
+                                id="searchInput"
+                                class="form-control border-start-0 ps-0"
+                                placeholder="Tìm tên danh mục..."
+                                value="{{ request('search') }}"
+                                autocomplete="off"
+                                maxlength="100"
+                            >
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                <i class="fas fa-search"></i>
+                            </button>
+                            @if(request('search'))
+                                <a href="{{ route('categories.index') }}" class="btn btn-outline-secondary btn-sm" title="Xóa tìm kiếm">
+                                    <i class="fas fa-times"></i>
+                                </a>
+                            @endif
+                        </div>
+                        <div id="searchError" class="text-danger small mt-1 d-none"></div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card-body p-0">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">ID</th>
+                            <th>Tên danh mục</th>
+                            <th>Ngày tạo</th>
+                            <th class="text-end pe-4">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($categories as $cat)
+                        <tr>
+                            <td class="ps-4 text-muted">#{{ $cat->id }}</td>
+                            <td><strong class="text-dark">{{ $cat->name }}</strong></td>
+                            <td class="text-muted">{{ $cat->created_at->format('d/m/Y') }}</td>
+                            <td class="text-end pe-4">
+                                <form action="{{ route('categories.destroy', $cat->id) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa danh mục này?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-outline-danger btn-sm border-0">
+                                        <i class="fas fa-trash-alt"></i> Xóa
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
                         @empty
                         <tr>
-                            <td colspan="3" class="text-center py-5 text-muted">
+                            <td colspan="4" class="text-center py-5 text-muted">
                                 <i class="fas fa-folder-open display-4 opacity-25 mb-3 d-block"></i>
                                 Chưa có danh mục nào. Hãy thêm ở bên trái!
                             </td>
@@ -70,4 +100,38 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+document.getElementById('searchForm').addEventListener('submit', function (e) {
+    const input = document.getElementById('searchInput');
+    const error = document.getElementById('searchError');
+    const val   = input.value.trim();
+
+    // Reset
+    error.classList.add('d-none');
+    error.textContent = '';
+
+    if (val.length > 0 && val.length < 1) {
+        error.textContent = 'Từ khóa phải có ít nhất 1 ký tự.';
+        error.classList.remove('d-none');
+        e.preventDefault();
+        return;
+    }
+
+    if (val.length > 100) {
+        error.textContent = 'Từ khóa không được vượt quá 100 ký tự.';
+        error.classList.remove('d-none');
+        e.preventDefault();
+        return;
+    }
+
+    if (/[<>"'`;]/.test(val)) {
+        error.textContent = 'Từ khóa chứa ký tự không hợp lệ (< > " \' ` ;).';
+        error.classList.remove('d-none');
+        e.preventDefault();
+    }
+});
+</script>
+@endpush
 @endsection
