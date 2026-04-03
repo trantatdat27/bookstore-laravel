@@ -26,8 +26,31 @@ class AdminController extends Controller
 
     public function store(Request $request) {
         $request->validate([
-            'title' => 'required', 'author' => 'required', 'price' => 'required|numeric',
-            'stock' => 'required|integer|min:0', 'category_id' => 'required'
+            'title' => [
+                'required',
+                function ($attribute, $value, $fail) {
+                    if (preg_match('/[@#$%^&*()+\=\[\]{};:"\'<>,?\/\\\\|`~!]/u', trim($value))) {
+                        $fail('Tên sách không được chứa ký tự đặc biệt như: @, #, $, %, &, *, /, v.v.');
+                    }
+                    if (empty(trim($value))) {
+                        $fail('Tên sách không được để trống.');
+                    }
+                }
+            ],
+            'author' => [
+                'required',
+                function ($attribute, $value, $fail) {
+                    if (preg_match('/[@#$%^&*()+\=\[\]{};:"\'<>,?\/\\\\|`~!]/u', trim($value))) {
+                        $fail('Tên tác giả không được chứa ký tự đặc biệt như: @, #, $, %, &, *, /, v.v.');
+                    }
+                    if (empty(trim($value))) {
+                        $fail('Tên tác giả không được để trống.');
+                    }
+                }
+            ],
+            'price' => 'required|numeric',
+            'stock' => 'required|integer|min:0', 
+            'category_id' => 'required'
         ]);
         $data = $request->all();
         if ($request->hasFile('image')) {
@@ -46,6 +69,35 @@ class AdminController extends Controller
     }
 
     public function update(Request $request, $id) {
+        // Validate input
+        $request->validate([
+            'title' => [
+                'required',
+                function ($attribute, $value, $fail) {
+                    if (preg_match('/[@#$%^&*()+\=\[\]{};:"\'<>,?\/\\\\|`~!]/u', trim($value))) {
+                        $fail('Tên sách không được chứa ký tự đặc biệt như: @, #, $, %, &, *, /, v.v.');
+                    }
+                    if (empty(trim($value))) {
+                        $fail('Tên sách không được để trống.');
+                    }
+                }
+            ],
+            'author' => [
+                'required',
+                function ($attribute, $value, $fail) {
+                    if (preg_match('/[@#$%^&*()+\=\[\]{};:"\'<>,?\/\\\\|`~!]/u', trim($value))) {
+                        $fail('Tên tác giả không được chứa ký tự đặc biệt như: @, #, $, %, &, *, /, v.v.');
+                    }
+                    if (empty(trim($value))) {
+                        $fail('Tên tác giả không được để trống.');
+                    }
+                }
+            ],
+            'price' => 'required|numeric',
+            'stock' => 'required|integer|min:0',
+            'category_id' => 'required'
+        ]);
+        
         $book = Book::findOrFail($id);
         $data = $request->all();
         if ($request->hasFile('image')) {

@@ -18,12 +18,30 @@
             <div class="row g-4 mb-4">
                 <div class="col-md-6">
                     <label class="form-label fw-bold text-muted">Tên sách</label>
-                    <input type="text" name="title" value="{{ $book->title }}" class="form-control" required>
+                    <input 
+                        type="text" 
+                        name="title" 
+                        id="bookTitle"
+                        value="{{ $book->title }}" 
+                        class="form-control" 
+                        required
+                        autocomplete="off"
+                    >
+                    <small class="text-danger" id="titleError" style="display: none;"></small>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-bold text-muted">Tác giả</label>
-                    <input type="text" name="author" value="{{ $book->author }}" class="form-control" required>
+                    <input 
+                        type="text" 
+                        name="author" 
+                        id="bookAuthor"
+                        value="{{ $book->author }}" 
+                        class="form-control" 
+                        required
+                        autocomplete="off"
+                    >
+                    <small class="text-danger" id="authorError" style="display: none;"></small>
                 </div>
             </div>
 
@@ -72,7 +90,7 @@
             <hr class="my-4">
             
             <div class="text-end">
-                <button type="submit" class="btn btn-primary btn-lg px-5 fw-bold shadow-sm">
+                <button type="submit" class="btn btn-primary btn-lg px-5 fw-bold shadow-sm" id="submitBtn">
                     <i class="fas fa-save me-2"></i> Cập nhật Sách
                 </button>
             </div>
@@ -80,3 +98,66 @@
     </div>
 </div>
 @endsection
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const bookTitleInput = document.getElementById('bookTitle');
+    const bookAuthorInput = document.getElementById('bookAuthor');
+    const titleError = document.getElementById('titleError');
+    const authorError = document.getElementById('authorError');
+    const form = document.querySelector('form');
+    
+    // Hàm validation cho nhập liệu
+    function validateInput(input, errorElement) {
+        input.addEventListener('input', function(e) {
+            const value = e.target.value;
+            // Loại bỏ ký tự đặc biệt: @, #, $, %, ^, &, *, (, ), +, =, [, ], {, }, ;, :, ", ', <, >, ,, ?, /, \, |, `, ~, !
+            const cleanValue = value.replace(/[@#$%^&*()+\=\[\]{};:"'<>,?\/\\|`~!]/g, '');
+            
+            if (value !== cleanValue) {
+                e.target.value = cleanValue;
+                showErrorMessage(errorElement, 'Ký tự đặc biệt không được phép!');
+                setTimeout(() => errorElement.style.display = 'none', 3000);
+            }
+        });
+    }
+    
+    // Hàm xác thực khi submit
+    function addSubmitValidation(input, errorElement, fieldName) {
+        form.addEventListener('submit', function(e) {
+            const value = input.value.trim();
+            
+            // Kiểm tra chứa ký tự đặc biệt
+            if (/@|#|\$|%|\^|&|\*|\(|\)|\+|=|\[|\]|{|}|;|:|"|'|<|>|,|\?|\/|\\|\||`|~|!/.test(value)) {
+                e.preventDefault();
+                showErrorMessage(errorElement, fieldName + ' không được chứa ký tự đặc biệt như: @, #, $, %, &, *, /, v.v.');
+                return false;
+            }
+            
+            // Kiểm tra không để trống
+            if (value === '') {
+                e.preventDefault();
+                showErrorMessage(errorElement, fieldName + ' không được để trống!');
+                return false;
+            }
+        });
+    }
+    
+    // Áp dụng validation cho cả hai input
+    if (bookTitleInput) {
+        validateInput(bookTitleInput, titleError);
+        addSubmitValidation(bookTitleInput, titleError, 'Tên sách');
+    }
+    
+    if (bookAuthorInput) {
+        validateInput(bookAuthorInput, authorError);
+        addSubmitValidation(bookAuthorInput, authorError, 'Tên tác giả');
+    }
+});
+
+function showErrorMessage(element, message) {
+    element.textContent = message;
+    element.style.display = 'block';
+    element.style.marginTop = '5px';
+}
+</script>
