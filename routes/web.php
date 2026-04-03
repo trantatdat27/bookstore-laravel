@@ -50,7 +50,7 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     ->name('cart.track');
 
     Route::put('/order/cancel/{id}', [CartController::class, 'cancelOrder'])->name('cart.cancel')->middleware('auth');
-    
+    Route::patch('/update-cart', [App\Http\Controllers\CartController::class, 'update'])->name('cart.update');
 });
 
 require __DIR__.'/auth.php';

@@ -15,6 +15,18 @@
         font-size: 100px;
         color: #dee2e6;
     }
+    /* Ép mũi tên (spinner) luôn hiển thị trên Chrome, Safari, Edge, Opera */
+    .update-cart-quantity::-webkit-inner-spin-button,
+    .update-cart-quantity::-webkit-outer-spin-button {
+        opacity: 1 !important;
+        visibility: visible !important;
+        display: block !important;
+    }
+
+    /* Đảm bảo ô input cân đối */
+    .update-cart-quantity {
+        padding-right: 5px;
+    }
 </style>
 @endsection
 
@@ -76,10 +88,13 @@
                                     </td>
                                     <td class="fw-medium">{{ number_format($item['price']) }}đ</td>
                                     <td>
-                                        <div class="badge bg-light text-dark border px-3 py-2 fs-6 fw-normal">
-                                            {{ $item['quantity'] }}
-                                        </div>
-                                    </td>
+    <input type="number" 
+           value="{{ $item['quantity'] }}" 
+           class="form-control text-center update-cart-quantity mx-auto" 
+           data-id="{{ $id }}" 
+           min="1" 
+           style="width: 80px; border-radius: 10px;">
+</td>
                                     <td class="fw-bold text-primary">{{ number_format($item['price'] * $item['quantity']) }}đ</td>
                                     <td>
                                         <form action="{{ route('cart.remove', $id) }}" method="POST">
@@ -132,4 +147,29 @@
         </div>
     </div>
 </div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script type="text/javascript">
+    // Lắng nghe sự kiện khi thay đổi con số trong ô input
+    $(".update-cart-quantity").on('change', function (e) {
+        var ele = $(this);
+
+        $.ajax({
+            url: '{{ route("cart.update") }}', // Đường dẫn đến hàm update trong Controller
+            method: "patch",
+            data: {
+                _token: '{{ csrf_token() }}', 
+                id: ele.attr("data-id"), 
+                quantity: ele.val()
+            },
+            success: function (response) {
+                // Load lại trang để cập nhật Tổng tiền
+                window.location.reload();
+            },
+            error: function (xhr) {
+                alert(xhr.responseJSON.message || "Số lượng không hợp lệ hoặc vượt quá kho!");
+                window.location.reload();
+            }
+        });
+    });
+</script>
 @endsection

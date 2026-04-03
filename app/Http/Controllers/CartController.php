@@ -191,4 +191,21 @@ class CartController extends Controller
 
     return redirect()->back()->with('success', 'Đã hủy đơn hàng thành công.');
 }
+// Cập nhật số lượng sản phẩm trong giỏ hàng
+public function update(Request $request)
+{
+    if($request->id && $request->quantity){
+        $cart = session()->get('cart');
+        
+        // Kiểm tra tồn kho trước khi cập nhật
+        $book = DB::table('books')->where('id', $request->id)->first();
+        if($request->quantity > $book->stock) {
+            return response()->json(['message' => 'Số lượng vượt quá kho hàng!'], 400);
+        }
+
+        $cart[$request->id]["quantity"] = $request->quantity;
+        session()->put('cart', $cart);
+        session()->flash('success', 'Giỏ hàng đã được cập nhật!');
+    }
+}
 }
