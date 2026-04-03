@@ -156,10 +156,10 @@
         @endif
         </div>
     </div>
-    @if($books->hasPages())
+    {{-- @if($books->hasPages())
         <div class="card-footer bg-white border-top-0 d-flex justify-content-end py-3">
             {{ $books->links('pagination::bootstrap-5') }}
         </div>
-    @endif
+    @endif --}}
 </div>
 @endsection
