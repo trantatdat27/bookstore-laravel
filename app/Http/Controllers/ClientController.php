@@ -5,12 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Book;
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ClientController extends Controller
 {
     public function index(Request $request)
     {
         $categories = Category::all();
+        $banners = DB::table('banners')->where('status', 1)->get();
         $query = Book::with('category'); 
 
         // 1. NẾU NGƯỜI DÙNG CÓ TÌM KIẾM HOẶC LỌC DANH MỤC
@@ -28,7 +30,7 @@ class ClientController extends Controller
 
             // Chỉ trả về kết quả lọc (không hiện mục bán chạy nữa cho đỡ rối)
             $books = $query->latest()->paginate(10);
-            return view('client.index', compact('books', 'categories'));
+            return view('client.index', compact('books', 'categories', 'banners'));
         }
 
         // 2. NẾU LÀ TRANG CHỦ MẶC ĐỊNH 
@@ -41,7 +43,7 @@ class ClientController extends Controller
         // Lấy sách mới nhất cho phần còn lại (phân trang)
         $books = Book::with('category')->latest()->paginate(10);
 
-        return view('client.index', compact('books', 'bestsellers', 'categories'));
+        return view('client.index', compact('books', 'bestsellers', 'categories', 'banners'));
     }
 
     public function show($id)

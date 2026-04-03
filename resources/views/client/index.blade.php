@@ -38,26 +38,79 @@
         color: #ffffff !important;
         border-color: #0d6efd !important;
     }
+    /* THÊM CSS CHO SIDEBAR & BANNER MỚI */
+    .sidebar-category {
+        background: #fff; border-radius: 10px; overflow: hidden;
+    }
+    .sidebar-link {
+        display: block; padding: 12px 20px; color: #333; text-decoration: none;
+        border-bottom: 1px solid #f8f9fa; transition: 0.2s; font-weight: 500;
+    }
+    .sidebar-link:hover, .sidebar-link.active {
+        background: #f8f9fa; color: #007bff; padding-left: 25px;
+    }
+    .hero-carousel-container {
+        border-radius: 10px; overflow: hidden; height: 100%;
+    }
+    .hero-carousel-container img {
+        height: 410px; /* Chiều cao khớp với sidebar danh mục */
+        object-fit: cover;
+    }
 </style>
 @endsection
 
 @section('content')
-<div class="container py-4">
+<div class="container mt-4">
+    <div class="row g-3 mb-5">
+        <div class="col-lg-3 d-none d-lg-block">
+            <div class="sidebar-category border shadow-sm h-100">
+                <div class="bg-dark text-white p-3">
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-bars me-2"></i> DANH MỤC SÁCH</h6>
+                </div>
+                <a href="{{ route('client.home') }}" class="sidebar-link {{ !request('category_id') ? 'active' : '' }}">
+                    Tất cả sách
+                </a>
+                @foreach($categories as $cat)
+                    <a href="{{ route('client.home', ['category_id' => $cat->id]) }}" 
+                       class="sidebar-link {{ request('category_id') == $cat->id ? 'active' : '' }}">
+                        {{ $cat->name }}
+                    </a>
+                @endforeach
+            </div>
+        </div>
 
-    <div class="category-scroll mb-4">
-        <a href="{{ route('client.home') }}" 
-           class="btn btn-sm rounded-pill px-4 fw-medium shadow-sm {{ !request('category_id') ? 'btn-cat-active' : 'btn-cat-custom' }}">
-            Tất cả
-        </a>
-        
-        @if(isset($categories))
+        <div class="col-lg-9 col-md-12">
+            @if(isset($banners) && count($banners) > 0)
+            <div id="heroCarousel" class="carousel slide hero-carousel-container shadow-sm" data-bs-ride="carousel">
+                <div class="carousel-inner">
+                    @foreach($banners as $key => $banner)
+                        <div class="carousel-item {{ $key == 0 ? 'active' : '' }}">
+                            <img src="{{ asset($banner->image) }}" class="d-block w-100" alt="Banner">
+                        </div>
+                    @endforeach
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon"></span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon"></span>
+                </button>
+            </div>
+            @endif
+        </div>
+    </div>
+
+    <div class="d-lg-none mb-4">
+        <h5 class="fw-bold mb-3">Danh mục</h5>
+        <div class="category-scroll">
+            <a href="{{ route('client.home') }}" class="btn {{ !request('category_id') ? 'btn-primary' : 'btn-outline-primary' }} rounded-pill px-4">Tất cả</a>
             @foreach($categories as $cat)
                 <a href="{{ route('client.home', ['category_id' => $cat->id]) }}" 
-                   class="btn btn-sm rounded-pill px-4 fw-medium shadow-sm {{ request('category_id') == $cat->id ? 'btn-cat-active' : 'btn-cat-custom' }}">
+                   class="btn {{ request('category_id') == $cat->id ? 'btn-primary' : 'btn-outline-primary' }} rounded-pill px-4">
                     {{ $cat->name }}
                 </a>
             @endforeach
-        @endif
+        </div>
     </div>
 
     @if(isset($bestsellers) && count($bestsellers) > 0)

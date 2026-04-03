@@ -40,6 +40,13 @@
                         <i class="fas fa-shopping-cart me-1"></i> Đơn hàng
                     </a>
                 </li>
+                <li class="nav-item">
+    <a class="nav-link {{ request()->routeIs('admin.banners.*') ? 'active' : '' }}" 
+       href="{{ route('admin.banners.index') }}">
+        <i class="fas fa-images me-2"></i>
+        <span>Quản lý Banner</span>
+    </a>
+</li>
             </ul>
             <ul class="navbar-nav">
                 <li class="nav-item">

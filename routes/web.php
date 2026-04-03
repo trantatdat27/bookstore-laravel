@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\Admin\BannerController;
 
 // --- Giao diện Khách hàng & Giỏ hàng ---
 Route::get('/', [ClientController::class, 'index'])->name('client.home');
@@ -28,6 +29,10 @@ Route::get('/dashboard', function () {
 // --- Quản trị (Dùng chung AdminController) ---
 Route::middleware(['auth'])->prefix('admin')->group(function () {
     
+    // QUẢN LÝ BANNER
+    Route::get('/banners', [BannerController::class, 'index'])->name('admin.banners.index');
+    Route::post('/banners', [BannerController::class, 'store'])->name('admin.banners.store');
+    Route::delete('/banners/{id}', [BannerController::class, 'destroy'])->name('admin.banners.destroy');
     // Quản lý Sách
     Route::get('/books', [AdminController::class, 'index'])->name('admin.index');
     Route::post('/books', [AdminController::class, 'store'])->name('books.store');
