@@ -145,10 +145,24 @@ class AdminController extends Controller
     }
 
     public function updateOrderStatus(Request $request, $id) {
-        DB::table('orders')->where('id', $id)->update(['status' => $request->status, 'updated_at' => now()]);
-        return redirect()->back()->with('success', 'Cập nhật trạng thái thành công!');
+    $order = DB::table('orders')->where('id', $id)->first();
+    $newStatus = $request->status;
+
+    if ($order->status !== 'canceled' && $newStatus === 'canceled') {
+        DB::transaction(function () use ($id) {
+            $items = DB::table('order_items')->where('order_id', $id)->get();
+            foreach ($items as $item) {
+                // Hoàn kho bằng book_id
+                DB::table('books')
+                    ->where('id', $item->book_id)
+                    ->increment('stock', $item->quantity);
+            }
+        });
     }
 
+    DB::table('orders')->where('id', $id)->update(['status' => $newStatus, 'updated_at' => now()]);
+    return redirect()->back()->with('success', 'Cập nhật trạng thái thành công!');
+}
     public function orderDestroy($id) {
         DB::table('order_items')->where('order_id', $id)->delete();
         DB::table('orders')->where('id', $id)->delete();

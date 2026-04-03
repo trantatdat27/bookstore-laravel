@@ -116,6 +116,7 @@ class CartController extends Controller
                 foreach ($cart as $id => $details) {
                     DB::table('order_items')->insert([
                         'order_id' => $orderId,
+                        'book_id'  => $id,
                         'book_title' => $details['title'],
                         'quantity' => $details['quantity'],
                         'price' => $details['price'],
@@ -166,18 +167,27 @@ class CartController extends Controller
 // Hàm xử lý hủy đơn hàng từ phía khách hàng (Client)
     public function cancelOrder($id)
 {
-    // Tìm đơn hàng của đúng user
     $order = DB::table('orders')->where('id', $id)->where('user_id', auth()->id())->first();
 
     if (!$order || $order->status !== 'pending') {
         return redirect()->back()->with('error', 'Không thể hủy đơn hàng này.');
     }
 
-    // Cập nhật trạng thái
-    DB::table('orders')->where('id', $id)->update([
-        'status' => 'canceled',
-        'updated_at' => now()
-    ]);
+    DB::transaction(function () use ($id) {
+        $items = DB::table('order_items')->where('order_id', $id)->get();
+
+        foreach ($items as $item) {
+            // Sử dụng book_id để cộng lại kho
+            DB::table('books')
+                ->where('id', $item->book_id) 
+                ->increment('stock', $item->quantity);
+        }
+
+        DB::table('orders')->where('id', $id)->update([
+            'status' => 'canceled',
+            'updated_at' => now()
+        ]);
+    });
 
     return redirect()->back()->with('success', 'Đã hủy đơn hàng thành công.');
 }
