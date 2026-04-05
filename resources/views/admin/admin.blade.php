@@ -26,35 +26,17 @@
         <h5 class="mb-0 fw-bold"><i class="fas fa-plus-circle text-success me-2"></i>Thêm sách mới</h5>
     </div>
     <div class="card-body bg-light rounded-bottom-4">
-        <form action="{{ route('books.store') }}" method="POST" enctype="multipart/form-data" id="addBookForm">
+        <form action="{{ route('books.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
             
             <div class="row g-3 mb-3">
                 <div class="col-md-6">
                     <label class="form-label fw-semibold small text-muted">Tên sách <span class="text-danger">*</span></label>
-                    <input 
-                        type="text" 
-                        name="title" 
-                        id="addBookTitle"
-                        placeholder="Nhập tên sách..." 
-                        class="form-control" 
-                        required
-                        autocomplete="off"
-                    >
-                    <small class="text-danger" id="addTitleError" style="display: none;"></small>
+                    <input type="text" name="title" placeholder="Nhập tên sách..." class="form-control" required>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-semibold small text-muted">Tác giả <span class="text-danger">*</span></label>
-                    <input 
-                        type="text" 
-                        name="author" 
-                        id="addBookAuthor"
-                        placeholder="Nhập tên tác giả..." 
-                        class="form-control" 
-                        required
-                        autocomplete="off"
-                    >
-                    <small class="text-danger" id="addAuthorError" style="display: none;"></small>
+                    <input type="text" name="author" placeholder="Nhập tên tác giả..." class="form-control" required>
                 </div>
             </div>
 
@@ -174,74 +156,10 @@
         @endif
         </div>
     </div>
-    {{-- @if($books->hasPages())
+    @if($books->hasPages())
         <div class="card-footer bg-white border-top-0 d-flex justify-content-end py-3">
             {{ $books->links('pagination::bootstrap-5') }}
         </div>
-    @endif --}}
+    @endif
 </div>
 @endsection
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // ===== VALIDATION FORM THÊM SÁCH =====
-    const addBookForm = document.getElementById('addBookForm');
-    const addBookTitle = document.getElementById('addBookTitle');
-    const addBookAuthor = document.getElementById('addBookAuthor');
-    const addTitleError = document.getElementById('addTitleError');
-    const addAuthorError = document.getElementById('addAuthorError');
-    
-    // Hàm validation cho nhập liệu
-    function validateInput(input, errorElement) {
-        input.addEventListener('input', function(e) {
-            const value = e.target.value;
-            // Loại bỏ ký tự đặc biệt: @, #, $, %, ^, &, *, (, ), +, =, [, ], {, }, ;, :, ", ', <, >, ,, ?, /, \, |, `, ~, !
-            const cleanValue = value.replace(/[@#$%^&*()+\=\[\]{};:"'<>,?\/\\|`~!]/g, '');
-            
-            if (value !== cleanValue) {
-                e.target.value = cleanValue;
-                showErrorMessage(errorElement, 'Ký tự đặc biệt không được phép!');
-                setTimeout(() => errorElement.style.display = 'none', 3000);
-            }
-        });
-    }
-    
-    // Hàm xác thực khi submit
-    function addSubmitValidation(input, errorElement, fieldName) {
-        addBookForm.addEventListener('submit', function(e) {
-            const value = input.value.trim();
-            
-            // Kiểm tra chứa ký tự đặc biệt
-            if (/@|#|\$|%|\^|&|\*|\(|\)|\+|=|\[|\]|{|}|;|:|"|'|<|>|,|\?|\/|\\|\||`|~|!/.test(value)) {
-                e.preventDefault();
-                showErrorMessage(errorElement, fieldName + ' không được chứa ký tự đặc biệt như: @, #, $, %, &, *, /, v.v.');
-                return false;
-            }
-            
-            // Kiểm tra không để trống
-            if (value === '') {
-                e.preventDefault();
-                showErrorMessage(errorElement, fieldName + ' không được để trống!');
-                return false;
-            }
-        });
-    }
-    
-    // Áp dụng validation cho cả hai input
-    if (addBookTitle) {
-        validateInput(addBookTitle, addTitleError);
-        addSubmitValidation(addBookTitle, addTitleError, 'Tên sách');
-    }
-    
-    if (addBookAuthor) {
-        validateInput(addBookAuthor, addAuthorError);
-        addSubmitValidation(addBookAuthor, addAuthorError, 'Tên tác giả');
-    }
-});
-
-function showErrorMessage(element, message) {
-    element.textContent = message;
-    element.style.display = 'block';
-    element.style.marginTop = '5px';
-}
-</script>
