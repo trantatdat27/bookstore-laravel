@@ -82,20 +82,28 @@
         <div class="col-lg-9 col-md-12">
             @if(isset($banners) && count($banners) > 0)
             <div id="heroCarousel" class="carousel slide hero-carousel-container shadow-sm" data-bs-ride="carousel">
-                <div class="carousel-inner">
-                    @foreach($banners as $key => $banner)
-                        <div class="carousel-item {{ $key == 0 ? 'active' : '' }}">
-                            <img src="{{ asset($banner->image) }}" class="d-block w-100" alt="Banner">
-                        </div>
-                    @endforeach
-                </div>
-                <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
-                    <span class="carousel-control-prev-icon"></span>
-                </button>
-                <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
-                    <span class="carousel-control-next-icon"></span>
-                </button>
+    
+    <div class="carousel-indicators">
+        @foreach($banners as $key => $banner)
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="{{ $key }}" class="{{ $key == 0 ? 'active' : '' }}"></button>
+        @endforeach
+    </div>
+
+    <div class="carousel-inner">
+        @foreach($banners as $key => $banner)
+            <div class="carousel-item {{ $key == 0 ? 'active' : '' }}" data-bs-interval="3000">
+                <img src="{{ asset($banner->image) }}" class="d-block w-100" alt="Banner">
             </div>
+        @endforeach
+    </div>
+
+    <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon"></span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon"></span>
+    </button>
+</div>
             @endif
         </div>
     </div>
