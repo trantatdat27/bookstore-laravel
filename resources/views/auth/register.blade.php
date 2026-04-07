@@ -23,27 +23,79 @@
                         </div>
                     @endif
 
-                    <form method="POST" action="{{ route('register') }}">
+                    <form method="POST" action="{{ route('register') }}" novalidate>
                         @csrf
                         
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Họ và tên</label>
-                            <input type="text" name="name" class="form-control px-3 py-2 rounded-3" value="{{ old('name') }}" required autofocus>
+                            <label for="name" class="form-label fw-bold">Họ và tên <span class="text-danger">*</span></label>
+                            <input 
+                                type="text" 
+                                id="name"
+                                name="name" 
+                                class="form-control px-3 py-2 rounded-3 @error('name') is-invalid @enderror" 
+                                value="{{ old('name') }}" 
+                                placeholder="Nhập họ và tên của bạn"
+                                required 
+                                autofocus>
+                            @error('name')
+                                <div class="invalid-feedback d-block text-danger small mt-2">
+                                    <i class="fas fa-exclamation-circle"></i> {{ $message }}
+                                </div>
+                            @enderror
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Email</label>
-                            <input type="email" name="email" class="form-control px-3 py-2 rounded-3" value="{{ old('email') }}" required>
+                            <label for="email" class="form-label fw-bold">Email <span class="text-danger">*</span></label>
+                            <input 
+                                type="email" 
+                                id="email"
+                                name="email" 
+                                class="form-control px-3 py-2 rounded-3 @error('email') is-invalid @enderror" 
+                                value="{{ old('email') }}" 
+                                placeholder="Nhập email của bạn"
+                                required>
+                            @error('email')
+                                <div class="invalid-feedback d-block text-danger small mt-2">
+                                    <i class="fas fa-exclamation-circle"></i> {{ $message }}
+                                </div>
+                            @enderror
                         </div>
                         
                         <div class="row mb-4">
                             <div class="col-md-6">
-                                <label class="form-label fw-bold">Mật khẩu</label>
-                                <input type="password" name="password" class="form-control px-3 py-2 rounded-3" required autocomplete="new-password">
+                                <label for="password" class="form-label fw-bold">Mật khẩu <span class="text-danger">*</span></label>
+                                <input 
+                                    type="password" 
+                                    id="password"
+                                    name="password" 
+                                    class="form-control px-3 py-2 rounded-3 @error('password') is-invalid @enderror" 
+                                    placeholder="Nhập mật khẩu"
+                                    required 
+                                    autocomplete="new-password">
+                                @error('password')
+                                    <div class="invalid-feedback d-block text-danger small mt-2">
+                                        <i class="fas fa-exclamation-circle"></i> {{ $message }}
+                                    </div>
+                                @enderror
+                                <small class="text-muted d-block mt-2">
+                                    <i class="fas fa-info-circle"></i> Ít nhất 6 ký tự, bao gồm chữ hoa, chữ thường, số
+                                </small>
                             </div>
                             <div class="col-md-6 mt-3 mt-md-0">
-                                <label class="form-label fw-bold">Xác nhận mật khẩu</label>
-                                <input type="password" name="password_confirmation" class="form-control px-3 py-2 rounded-3" required autocomplete="new-password">
+                                <label for="password_confirmation" class="form-label fw-bold">Xác nhận mật khẩu <span class="text-danger">*</span></label>
+                                <input 
+                                    type="password" 
+                                    id="password_confirmation"
+                                    name="password_confirmation" 
+                                    class="form-control px-3 py-2 rounded-3 @error('password_confirmation') is-invalid @enderror" 
+                                    placeholder="Xác nhận mật khẩu"
+                                    required 
+                                    autocomplete="new-password">
+                                @error('password_confirmation')
+                                    <div class="invalid-feedback d-block text-danger small mt-2">
+                                        <i class="fas fa-exclamation-circle"></i> {{ $message }}
+                                    </div>
+                                @enderror
                             </div>
                         </div>
 

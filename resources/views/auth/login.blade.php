@@ -24,22 +24,52 @@
                         </div>
                     @endif
 
-                    <form method="POST" action="{{ route('login') }}">
+                    <form method="POST" action="{{ route('login') }}" novalidate>
                         @csrf
                         
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Email</label>
-                            <input type="email" name="email" class="form-control px-3 py-2 rounded-3" value="{{ old('email') }}" required autofocus>
+                            <label for="email" class="form-label fw-bold">Email <span class="text-danger">*</span></label>
+                            <input 
+                                type="email" 
+                                id="email"
+                                name="email" 
+                                class="form-control px-3 py-2 rounded-3 @error('email') is-invalid @enderror" 
+                                value="{{ old('email') }}" 
+                                placeholder="Nhập email của bạn"
+                                required 
+                                autofocus>
+                            @error('email')
+                                <div class="invalid-feedback d-block text-danger small mt-2">
+                                    <i class="fas fa-exclamation-circle"></i> {{ $message }}
+                                </div>
+                            @enderror
                         </div>
                         
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Mật khẩu</label>
-                            <input type="password" name="password" class="form-control px-3 py-2 rounded-3" required autocomplete="current-password">
+                            <label for="password" class="form-label fw-bold">Mật khẩu <span class="text-danger">*</span></label>
+                            <input 
+                                type="password" 
+                                id="password"
+                                name="password" 
+                                class="form-control px-3 py-2 rounded-3 @error('password') is-invalid @enderror" 
+                                placeholder="Nhập mật khẩu"
+                                required 
+                                autocomplete="current-password">
+                            @error('password')
+                                <div class="invalid-feedback d-block text-danger small mt-2">
+                                    <i class="fas fa-exclamation-circle"></i> {{ $message }}
+                                </div>
+                            @enderror
                         </div>
 
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="remember" id="remember_me">
+                                <input 
+                                    class="form-check-input" 
+                                    type="checkbox" 
+                                    name="remember" 
+                                    id="remember_me"
+                                    {{ old('remember') ? 'checked' : '' }}>
                                 <label class="form-check-label text-muted" for="remember_me">Nhớ mật khẩu</label>
                             </div>
                             @if (Route::has('password.request'))

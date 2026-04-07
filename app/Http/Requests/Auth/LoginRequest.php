@@ -27,8 +27,40 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'string', 'email'],
-            'password' => ['required', 'string'],
+            'email' => ['required', 'string', 'email', 'max:255'],
+            'password' => ['required', 'string', 'min:6', 'max:255'],
+        ];
+    }
+
+    /**
+     * Get custom error messages for validation rules.
+     *
+     * @return array
+     */
+    public function messages(): array
+    {
+        return [
+            'email.required' => 'Email là bắt buộc.',
+            'email.email' => 'Email không hợp lệ.',
+            'email.max' => 'Email không được vượt quá 255 ký tự.',
+            'email.string' => 'Email phải là một chuỗi ký tự.',
+            'password.required' => 'Mật khẩu là bắt buộc.',
+            'password.min' => 'Mật khẩu phải có ít nhất 6 ký tự.',
+            'password.max' => 'Mật khẩu không được vượt quá 255 ký tự.',
+            'password.string' => 'Mật khẩu phải là một chuỗi ký tự.',
+        ];
+    }
+
+    /**
+     * Get custom attribute names for validation.
+     *
+     * @return array
+     */
+    public function attributes(): array
+    {
+        return [
+            'email' => 'Email',
+            'password' => 'Mật khẩu',
         ];
     }
 
