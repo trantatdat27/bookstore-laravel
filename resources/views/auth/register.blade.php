@@ -28,18 +28,27 @@
                         
                         <div class="mb-3">
                             <label class="form-label fw-bold">Họ và tên</label>
-                            <input type="text" name="name" class="form-control px-3 py-2 rounded-3" value="{{ old('name') }}" required autofocus>
+                            <input type="text" name="name" class="form-control px-3 py-2 rounded-3" value="{{ old('name') }}" minlength="2" maxlength="255" required autofocus autocomplete="name">
+                            @error('name')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label fw-bold">Email</label>
-                            <input type="email" name="email" class="form-control px-3 py-2 rounded-3" value="{{ old('email') }}" required>
+                            <input type="email" name="email" class="form-control px-3 py-2 rounded-3" value="{{ old('email') }}" maxlength="255" required autocomplete="email">
+                            @error('email')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
                         </div>
                         
                         <div class="row mb-4">
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Mật khẩu</label>
                                 <input type="password" name="password" class="form-control px-3 py-2 rounded-3" required autocomplete="new-password">
+                                @error('password')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
                             </div>
                             <div class="col-md-6 mt-3 mt-md-0">
                                 <label class="form-label fw-bold">Xác nhận mật khẩu</label>
