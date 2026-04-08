@@ -29,17 +29,23 @@
                         
                         <div class="mb-3">
                             <label class="form-label fw-bold">Email</label>
-                            <input type="email" name="email" class="form-control px-3 py-2 rounded-3" value="{{ old('email') }}" required autofocus>
+                            <input type="email" name="email" class="form-control px-3 py-2 rounded-3" value="{{ old('email') }}" maxlength="255" required autofocus autocomplete="email">
+                            @error('email')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
                         </div>
                         
                         <div class="mb-3">
                             <label class="form-label fw-bold">Mật khẩu</label>
                             <input type="password" name="password" class="form-control px-3 py-2 rounded-3" required autocomplete="current-password">
+                            @error('password')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
                         </div>
 
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="remember" id="remember_me">
+                                <input class="form-check-input" type="checkbox" name="remember" id="remember_me" {{ old('remember') ? 'checked' : '' }}>
                                 <label class="form-check-label text-muted" for="remember_me">Nhớ mật khẩu</label>
                             </div>
                             @if (Route::has('password.request'))

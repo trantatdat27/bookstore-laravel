@@ -11,6 +11,13 @@ use Illuminate\Validation\ValidationException;
 
 class LoginRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'email' => strtolower(trim((string) $this->input('email'))),
+        ]);
+    }
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -27,8 +34,17 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'string', 'email'],
+            'email' => ['required', 'string', 'email:rfc,dns'],
             'password' => ['required', 'string'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'email.required' => 'Vui long nhap email.',
+            'email.email' => 'Email khong dung dinh dang.',
+            'password.required' => 'Vui long nhap mat khau.',
         ];
     }
 
