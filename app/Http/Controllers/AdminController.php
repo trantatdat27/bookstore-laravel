@@ -145,27 +145,45 @@ class AdminController extends Controller
     }
 
     public function updateOrderStatus(Request $request, $id) {
-    $order = DB::table('orders')->where('id', $id)->first();
-    $newStatus = $request->status;
+        $order = DB::table('orders')->where('id', $id)->first();
+        $newStatus = $request->status;
 
-    if ($order->status !== 'canceled' && $newStatus === 'canceled') {
-        DB::transaction(function () use ($id) {
-            $items = DB::table('order_items')->where('order_id', $id)->get();
-            foreach ($items as $item) {
-                // Hoàn kho bằng book_id
-                DB::table('books')
-                    ->where('id', $item->book_id)
-                    ->increment('stock', $item->quantity);
-            }
-        });
+        // Chặn không cho đổi trạng thái nếu đơn đã bị hủy trước đó
+        if ($order->status === 'canceled') {
+            return redirect()->back()->with('error', 'Đơn hàng đã hủy, không thể thay đổi trạng thái khác!');
+        }
+
+        // Nếu admin đổi sang Hủy -> Hoàn kho + Trừ lượt bán
+        if ($newStatus === 'canceled') {
+            DB::transaction(function () use ($id) {
+                $items = DB::table('order_items')->where('order_id', $id)->get();
+                foreach ($items as $item) {
+                    DB::table('books')->where('id', $item->book_id)->increment('stock', $item->quantity);
+                    DB::table('books')->where('id', $item->book_id)->decrement('sold', $item->quantity);
+                }
+            });
+        }
+
+        DB::table('orders')->where('id', $id)->update(['status' => $newStatus, 'updated_at' => now()]);
+        return redirect()->back()->with('success', 'Cập nhật trạng thái thành công!');
     }
-
-    DB::table('orders')->where('id', $id)->update(['status' => $newStatus, 'updated_at' => now()]);
-    return redirect()->back()->with('success', 'Cập nhật trạng thái thành công!');
-}
     public function orderDestroy($id) {
-        DB::table('order_items')->where('order_id', $id)->delete();
-        DB::table('orders')->where('id', $id)->delete();
+        $order = DB::table('orders')->where('id', $id)->first();
+
+        DB::transaction(function () use ($id, $order) {
+            // Nếu đơn hàng CHƯA HỦY mà bị Admin XÓA -> Phải hoàn kho trước khi xóa
+            if ($order && $order->status !== 'canceled') {
+                $items = DB::table('order_items')->where('order_id', $id)->get();
+                foreach ($items as $item) {
+                    DB::table('books')->where('id', $item->book_id)->increment('stock', $item->quantity);
+                    DB::table('books')->where('id', $item->book_id)->decrement('sold', $item->quantity);
+                }
+            }
+
+            DB::table('order_items')->where('order_id', $id)->delete();
+            DB::table('orders')->where('id', $id)->delete();
+        });
+
         return redirect()->back()->with('success', 'Đã xóa đơn hàng!');
     }
 }

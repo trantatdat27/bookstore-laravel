@@ -99,9 +99,17 @@ class CartController extends Controller
             DB::transaction(function () use ($cart, $request) {
                 $total = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
 
-                // 1. Lưu đơn hàng chính
+                // 1. KIỂM TRA KHO TRƯỚC (Chống lỗi click không chạy)
+                foreach ($cart as $id => $details) {
+                    $book = Book::find($id);
+                    if (!$book || $book->stock < $details['quantity']) {
+                        throw new \Exception("Sách '{$details['title']}' không đủ số lượng trong kho!");
+                    }
+                }
+
+                // 2. Lưu đơn hàng chính
                 $orderId = DB::table('orders')->insertGetId([
-                    'user_id' => auth()->id(), // THÊM DÒNG NÀY: Lưu ID người mua
+                    'user_id' => auth()->id(),
                     'customer_name' => $request->fullname,
                     'phone' => $request->phone,
                     'address' => $request->address,
@@ -112,7 +120,7 @@ class CartController extends Controller
                     'updated_at' => now()
                 ]);
 
-                // 2. Lưu chi tiết và xử lý kho/lượt bán
+                // 3. Lưu chi tiết và xử lý kho/lượt bán
                 foreach ($cart as $id => $details) {
                     DB::table('order_items')->insert([
                         'order_id' => $orderId,
@@ -125,12 +133,8 @@ class CartController extends Controller
                     ]);
 
                     $book = Book::find($id);
-                    if ($book) {
-                        // TRỪ số lượng tồn kho
-                        $book->decrement('stock', $details['quantity']);
-                        // TĂNG số lượng đã bán (Để hiện thị mục Sách Bán Chạy)
-                        $book->increment('sold', $details['quantity']); 
-                    }
+                    $book->decrement('stock', $details['quantity']); // Trừ kho
+                    $book->increment('sold', $details['quantity']);  // Tăng bán chạy
                 }
             });
 
@@ -138,7 +142,8 @@ class CartController extends Controller
             return redirect()->route('client.home')->with('success', 'Đặt hàng thành công! Đơn hàng của bạn đang được xử lý.');
 
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Có lỗi xảy ra khi đặt hàng: ' . $e->getMessage());
+            // withInput() giúp giữ lại chữ khách đã nhập khi load lại trang
+            return redirect()->back()->withInput()->with('error', $e->getMessage());
         }
     }
 
@@ -173,23 +178,39 @@ class CartController extends Controller
         return redirect()->back()->with('error', 'Không thể hủy đơn hàng này.');
     }
 
-    DB::transaction(function () use ($id) {
-        $items = DB::table('order_items')->where('order_id', $id)->get();
+    try {
+        DB::transaction(function () use ($id) {
+            $items = DB::table('order_items')->where('order_id', $id)->get();
 
-        foreach ($items as $item) {
-            // Sử dụng book_id để cộng lại kho
-            DB::table('books')
-                ->where('id', $item->book_id) 
-                ->increment('stock', $item->quantity);
-        }
+            foreach ($items as $item) {
+                // 1. Cộng lại số lượng vào kho (Ép kiểu int để an toàn)
+                DB::table('books')->where('id', $item->book_id)->increment('stock', (int)$item->quantity);
+                
+                // 2. Xử lý trừ lượt bán an toàn (Chống lỗi âm UNSIGNED)
+                $book = DB::table('books')->where('id', $item->book_id)->first();
+                if ($book) {
+                    if ($book->sold >= $item->quantity) {
+                        DB::table('books')->where('id', $item->book_id)->decrement('sold', (int)$item->quantity);
+                    } else {
+                        // Nếu số đã bán hiện tại nhỏ hơn số lượng hủy, trả về 0 luôn để tránh lỗi DB
+                        DB::table('books')->where('id', $item->book_id)->update(['sold' => 0]);
+                    }
+                }
+            }
 
-        DB::table('orders')->where('id', $id)->update([
-            'status' => 'canceled',
-            'updated_at' => now()
-        ]);
-    });
+            // 3. Cập nhật trạng thái đơn
+            DB::table('orders')->where('id', $id)->update([
+                'status' => 'canceled',
+                'updated_at' => now()
+            ]);
+        });
 
-    return redirect()->back()->with('success', 'Đã hủy đơn hàng thành công.');
+        return redirect()->back()->with('success', 'Đã hủy đơn hàng thành công.');
+
+    } catch (\Exception $e) {
+        // Ném lỗi ra màn hình để bạn dễ dàng bắt bệnh nếu có lỗi khác
+        return redirect()->back()->with('error', 'Lỗi hệ thống khi hủy đơn: ' . $e->getMessage());
+    }
 }
 // Cập nhật số lượng sản phẩm trong giỏ hàng
 public function update(Request $request)
