@@ -25,30 +25,37 @@ class CartController extends Controller
 
     // Thêm sản phẩm
     public function add($id)
-    {
-        $book = Book::findOrFail($id);
-        
-        if ($book->stock <= 0) {
-            return redirect()->back()->with('error', 'Sách này hiện đã hết hàng!');
-        }
-
-        $cart = session()->get('cart', []);
-
-        if(isset($cart[$id])) {
-            $cart[$id]['quantity']++;
-        } else {
-            $cart[$id] = [
-                "title" => $book->title,
-                "quantity" => 1,
-                "price" => $book->price,
-                "author" => $book->author,
-                "image" => $book->image
-            ];
-        }
-
-        session()->put('cart', $cart);
-        return redirect()->back()->with('success', 'Đã thêm vào giỏ hàng!');
+{
+    // 1. Kiểm tra đăng nhập
+    if (!auth()->check()) {
+        // Nếu chưa đăng nhập, chuyển hướng đến trang login kèm thông báo
+        return redirect()->route('login')->with('error', 'Vui lòng đăng nhập để có thể thêm sản phẩm vào giỏ hàng!');
     }
+
+    // 2. Tiếp tục logic cũ nếu đã đăng nhập
+    $book = Book::findOrFail($id);
+    
+    if ($book->stock <= 0) {
+        return redirect()->back()->with('error', 'Sách này hiện đã hết hàng!');
+    }
+
+    $cart = session()->get('cart', []);
+
+    if(isset($cart[$id])) {
+        $cart[$id]['quantity']++;
+    } else {
+        $cart[$id] = [
+            "title" => $book->title,
+            "quantity" => 1,
+            "price" => $book->price,
+            "author" => $book->author,
+            "image" => $book->image
+        ];
+    }
+
+    session()->put('cart', $cart);
+    return redirect()->back()->with('success', 'Đã thêm vào giỏ hàng!');
+}
 
     // Xóa sản phẩm
     public function remove($id)

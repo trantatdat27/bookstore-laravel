@@ -168,22 +168,46 @@ class AdminController extends Controller
         return redirect()->back()->with('success', 'Cập nhật trạng thái thành công!');
     }
     public function orderDestroy($id) {
-        $order = DB::table('orders')->where('id', $id)->first();
+    // 1. Kiểm tra đơn hàng có tồn tại không
+    $order = DB::table('orders')->where('id', $id)->first();
 
+    if (!$order) {
+        return redirect()->back()->with('error', 'Đơn hàng không tồn tại!');
+    }
+
+    try {
         DB::transaction(function () use ($id, $order) {
-            // Nếu đơn hàng CHƯA HỦY mà bị Admin XÓA -> Phải hoàn kho trước khi xóa
-            if ($order && $order->status !== 'canceled') {
+            // 2. SỬA ĐIỀU KIỆN: Chỉ hoàn kho nếu đơn hàng đang CHỜ XỬ LÝ (pending)
+            // Nếu đã completed (nhận hàng xong) hoặc canceled (đã hủy và hoàn kho rồi) thì KHÔNG hoàn kho nữa
+            if ($order->status === 'pending') {
                 $items = DB::table('order_items')->where('order_id', $id)->get();
+                
                 foreach ($items as $item) {
-                    DB::table('books')->where('id', $item->book_id)->increment('stock', $item->quantity);
-                    DB::table('books')->where('id', $item->book_id)->decrement('sold', $item->quantity);
+                    // Cộng lại số lượng kho
+                    DB::table('books')->where('id', $item->book_id)->increment('stock', (int)$item->quantity);
+                    
+                    // Trừ lượt bán an toàn (Chống lỗi âm Data Constraint)
+                    $book = DB::table('books')->where('id', $item->book_id)->first();
+                    if ($book) {
+                        if ($book->sold >= $item->quantity) {
+                            DB::table('books')->where('id', $item->book_id)->decrement('sold', (int)$item->quantity);
+                        } else {
+                            DB::table('books')->where('id', $item->book_id)->update(['sold' => 0]);
+                        }
+                    }
                 }
             }
 
+            // 3. Xóa dữ liệu (bắt buộc phải xóa chi tiết đơn trước, rồi mới xóa đơn hàng để không lỗi khóa ngoại)
             DB::table('order_items')->where('order_id', $id)->delete();
             DB::table('orders')->where('id', $id)->delete();
         });
 
-        return redirect()->back()->with('success', 'Đã xóa đơn hàng!');
+        return redirect()->back()->with('success', 'Đã xóa đơn hàng thành công!');
+
+    } catch (\Exception $e) {
+        // Bắt lỗi nếu có gián đoạn Database để hiển thị cho Admin biết thay vì trắng trang
+        return redirect()->back()->with('error', 'Lỗi hệ thống khi xóa đơn: ' . $e->getMessage());
     }
+}
 }

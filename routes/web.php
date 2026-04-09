@@ -56,6 +56,9 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
 
     Route::put('/order/cancel/{id}', [CartController::class, 'cancelOrder'])->name('cart.cancel')->middleware('auth');
     Route::patch('/update-cart', [App\Http\Controllers\CartController::class, 'update'])->name('cart.update');
+
+    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+    Route::get('/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
 });
 
 require __DIR__.'/auth.php';
