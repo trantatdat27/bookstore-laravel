@@ -6,6 +6,30 @@
     .book-description { line-height: 1.8; text-align: justify; color: #555; white-space: pre-line; font-size: 1.05rem; }
     .price-tag { font-size: 2.5rem; color: #dc3545; font-weight: 800; }
     .img-detail { border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); width: 100%; max-height: 550px; object-fit: contain; }
+    .review-item { background: #f8f9fa; border-left: 4px solid #0d6efd; padding: 20px; margin-bottom: 15px; border-radius: 8px; }
+    .review-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .rating-stars { color: #ffc107; font-size: 1.1rem; }
+    .review-comment { color: #555; line-height: 1.6; margin-top: 10px; }
+    .review-actions { margin-top: 10px; font-size: 0.9rem; }
+    .reviews-container {
+        max-height: 800px;
+        overflow-y: auto;
+        padding-right: 10px;
+    }
+    .reviews-container::-webkit-scrollbar {
+        width: 6px;
+    }
+    .reviews-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    .reviews-container::-webkit-scrollbar-thumb {
+        background: #0d6efd;
+        border-radius: 10px;
+    }
+    .reviews-container::-webkit-scrollbar-thumb:hover {
+        background: #054bc0;
+    }
 </style>
 @endsection
 
@@ -15,7 +39,8 @@
         <i class="fas fa-arrow-left me-2"></i>Quay lại cửa hàng
     </a>
     
-    <div class="row bg-white p-4 p-md-5 shadow-sm rounded-4 border-0">
+    <!-- HÀNG 1: Ảnh + Thông tin cơ bản -->
+    <div class="row bg-white p-4 p-md-5 shadow-sm rounded-4 border-0 mb-4">
         <div class="col-md-5 text-center mb-5 mb-md-0 position-relative">
             @if($book->image)
                 <img src="{{ asset($book->image) }}" class="img-detail" alt="{{ $book->title }}">
@@ -67,5 +92,95 @@
             </div>
         </div>
     </div>
-</div>
+
+    <!-- HÀNG 2: Mô tả + Đánh giá (2 cột trên desktop, full width trên mobile) -->
+    <div class="row g-4">
+        <!-- Cột trái: Mô tả sách (không cần vì đã ở hàng 1) -->
+        
+        <!-- Cột phải: PHẦN ĐÁNH GIÁ VÀ BÌNH LUẬN (Full width responsive) -->
+        <div class="col-12">
+            <div class="bg-white p-4 p-md-5 shadow-sm rounded-4 border-0">
+                <h3 class="fw-bold mb-4 text-dark"><i class="fas fa-star me-2 text-warning"></i>Đánh giá từ khách hàng</h3>
+
+                <!-- Nút tạo đánh giá -->
+                @auth
+                    <div class="mb-4">
+                        @if(auth()->user()->hasPurchasedBook($book->id))
+                            @if(!auth()->user()->hasReviewedBook($book->id))
+                                <a href="{{ route('review.create', $book->id) }}" class="btn btn-success rounded-pill shadow">
+                                    <i class="fas fa-star me-2"></i>Viết đánh giá của bạn
+                                </a>
+                            @else
+                                <div class="alert alert-info rounded-3 mb-0">
+                                    <i class="fas fa-info-circle me-2"></i>Bạn đã đánh giá sách này rồi. <a href="{{ route('review.edit', auth()->user()->getReviewForBook($book->id)->id) }}" class="alert-link">Chỉnh sửa</a>
+                                </div>
+                            @endif
+                        @else
+                            <div class="alert alert-warning rounded-3 mb-0">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Bạn chỉ có thể đánh giá sách khi đơn hàng đã hoàn thành!
+                            </div>
+                        @endif
+                    </div>
+                @else
+                    <div class="mb-4">
+                        <a href="{{ route('login') }}" class="btn btn-primary rounded-pill shadow">
+                            <i class="fas fa-sign-in-alt me-2"></i>Đăng nhập để đánh giá
+                        </a>
+                    </div>
+                @endauth
+
+                <hr class="my-4 border-secondary opacity-25">
+
+                <!-- Danh sách đánh giá đã duyệt -->
+                @php
+                    $approvedReviews = $book->reviews()->where('status', 'approved')->latest()->get();
+                @endphp
+
+                @if($approvedReviews->isNotEmpty())
+                    <div class="reviews-list reviews-container">
+                        @foreach($approvedReviews as $review)
+                            <div class="review-item">
+                                <div class="review-header">
+                                    <div>
+                                        <strong class="text-dark">{{ $review->user->name }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ $review->created_at->format('d/m/Y H:i') }}</small>
+                                    </div>
+                                    <div class="rating-stars">
+                                        @for($i = 0; $i < $review->rating; $i++)
+                                            <i class="fas fa-star"></i>
+                                        @endfor
+                                        @for($i = $review->rating; $i < 5; $i++)
+                                            <i class="far fa-star"></i>
+                                        @endfor
+                                    </div>
+                                </div>
+                                @if($review->comment)
+                                    <div class="review-comment">{{ $review->comment }}</div>
+                                @endif
+                                @auth
+                                    @if(auth()->id() === $review->user_id)
+                                        <div class="review-actions">
+                                            <a href="{{ route('review.edit', $review->id) }}" class="btn-link text-primary">Sửa</a>
+                                            <form action="{{ route('review.destroy', $review->id) }}" method="POST" style="display: inline;">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn-link text-danger border-0 bg-transparent" onclick="return confirm('Bạn chắc chắn muốn xóa?')">Xóa</button>
+                                            </form>
+                                        </div>
+                                    @endif
+                                @endauth
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="alert alert-secondary rounded-3 text-center mb-0">
+                        <i class="fas fa-comments me-2"></i>Chưa có đánh giá nào. Hãy là người đầu tiên đánh giá!
+                    </div>
+                @endif
+            </div>
+        </div>
+        </div><!-- end col-12 -->
+    </div><!-- end row -->
+</div><!-- end container -->
 @endsection
