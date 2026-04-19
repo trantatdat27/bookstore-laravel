@@ -82,6 +82,11 @@
                 </div>
             </div>
 
+            <div class="mb-3">
+                <label class="form-label fw-semibold small text-muted">Mô tả sách</label>
+                <textarea name="description" rows="4" class="form-control" placeholder="Nhập mô tả chi tiết về cuốn sách..."></textarea>
+            </div>
+
             <div class="text-end mt-2">
                 <button type="submit" class="btn btn-success px-5 fw-bold"><i class="fas fa-save me-1"></i> Lưu Sách Mới</button>
             </div>

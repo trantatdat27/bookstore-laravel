@@ -46,12 +46,15 @@
                     </a>
                 </li>
                 <li class="nav-item">
-    <a class="nav-link {{ request()->routeIs('admin.banners.*') ? 'active' : '' }}" 
-       href="{{ route('admin.banners.index') }}">
-        <i class="fas fa-images me-2"></i>
-        <span>Quản lý Banner</span>
-    </a>
-</li>
+                    <a class="nav-link {{ request()->routeIs('admin.banners.*') ? 'active' : '' }}" href="{{ route('admin.banners.index') }}">
+                        <i class="fas fa-images me-1"></i> Quản lý Banner
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('admin.statistics*') ? 'active' : '' }}" href="{{ route('admin.statistics') }}">
+                        <i class="fas fa-chart-line me-1"></i> 📊 Thống Kê
+                    </a>
+                </li>
             </ul>
             <ul class="navbar-nav">
                 <li class="nav-item">

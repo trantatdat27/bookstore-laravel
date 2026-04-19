@@ -6,6 +6,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\Admin\BannerController;
+use App\Http\Controllers\StatisticsController;
 
 // --- Giao diện Khách hàng & Giỏ hàng ---
 Route::get('/', [ClientController::class, 'index'])->name('client.home');
@@ -65,6 +66,14 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::put('/reviews/{id}/approve', [ReviewController::class, 'approve'])->name('review.approve');
     Route::put('/reviews/{id}/reject', [ReviewController::class, 'reject'])->name('review.reject');
     Route::delete('/reviews/{id}', [ReviewController::class, 'adminDestroy'])->name('review.admin.destroy');
+
+    // === THỐNG KÊ VÀ PHÂN TÍCH ===
+    Route::get('/statistics', [StatisticsController::class, 'dashboard'])->name('admin.statistics');
+    Route::get('/statistics/sales', [StatisticsController::class, 'sales'])->name('admin.statistics.sales');
+    Route::get('/statistics/reviews', [StatisticsController::class, 'reviews'])->name('admin.statistics.reviews');
+    Route::get('/statistics/customers', [StatisticsController::class, 'customers'])->name('admin.statistics.customers');
+    Route::get('/statistics/inventory', [StatisticsController::class, 'inventory'])->name('admin.statistics.inventory');
+    Route::get('/statistics/chart-data', [StatisticsController::class, 'getChartData'])->name('admin.statistics.chart-data');
 
     Route::get('/track-order', [CartController::class, 'trackOrder'])
     ->middleware('auth') // Chỉ người dùng đã đăng nhập mới xem được lịch sử
