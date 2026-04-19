@@ -48,9 +48,11 @@ class AdminController extends Controller
                     }
                 }
             ],
-            'price' => 'required|numeric',
-            'stock' => 'required|integer|min:0', 
-            'category_id' => 'required'
+            'price' => 'required|numeric|min:0',
+            'stock' => 'required|integer|min:0',
+            'category_id' => 'required',
+            'description' => 'nullable|string|max:5000',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
         $data = $request->all();
         if ($request->hasFile('image')) {
@@ -93,9 +95,11 @@ class AdminController extends Controller
                     }
                 }
             ],
-            'price' => 'required|numeric',
+            'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
-            'category_id' => 'required'
+            'category_id' => 'required',
+            'description' => 'nullable|string|max:5000',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
         
         $book = Book::findOrFail($id);

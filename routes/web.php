@@ -38,7 +38,7 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 // --- Quản trị (Dùng chung AdminController) ---
-Route::middleware(['auth'])->prefix('admin')->group(function () {
+Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     
     // QUẢN LÝ BANNER
     Route::get('/banners', [BannerController::class, 'index'])->name('admin.banners.index');
@@ -74,16 +74,15 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::get('/statistics/customers', [StatisticsController::class, 'customers'])->name('admin.statistics.customers');
     Route::get('/statistics/inventory', [StatisticsController::class, 'inventory'])->name('admin.statistics.inventory');
     Route::get('/statistics/chart-data', [StatisticsController::class, 'getChartData'])->name('admin.statistics.chart-data');
+});
 
-    Route::get('/track-order', [CartController::class, 'trackOrder'])
-    ->middleware('auth') // Chỉ người dùng đã đăng nhập mới xem được lịch sử
-    ->name('cart.track');
-
-    Route::put('/order/cancel/{id}', [CartController::class, 'cancelOrder'])->name('cart.cancel')->middleware('auth');
-    Route::patch('/update-cart', [App\Http\Controllers\CartController::class, 'update'])->name('cart.update');
-
+// --- Quản lý Giỏ hàng & Đơn hàng (Customer) ---
+Route::middleware(['auth'])->group(function () {
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
     Route::get('/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
+    Route::get('/track-order', [CartController::class, 'trackOrder'])->name('cart.track');
+    Route::put('/order/cancel/{id}', [CartController::class, 'cancelOrder'])->name('cart.cancel');
+    Route::patch('/update-cart', [App\Http\Controllers\CartController::class, 'update'])->name('cart.update');
 });
 
 require __DIR__.'/auth.php';
